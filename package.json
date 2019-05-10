@@ -1,0 +1,31 @@
+{
+  "name": "bsmysql",
+  "version": "1.0.0",
+  "description": "一个MYSQL数据库的常用操作封装，操作方式类似THINKPHP的数据库操作",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/test.js"
+  },
+  "keywords": [
+    "mysql",
+    "node-mysql",
+    "bsmysql"
+  ],
+  "author": "lq9328@126.com",
+  "repository": {
+    "type": "git",
+    "url": "git+git@github.com:AspenLuoQiang/bsmysql.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AspenLuoQiang/bsmysql/issues"
+  },
+  "homepage": "https://github.com/AspenLuoQiang/bsmysql",
+  "license": "ISC",
+  "dependencies": {
+    "mysql": "^2.17.1"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^6.1.4"
+  }
+}
