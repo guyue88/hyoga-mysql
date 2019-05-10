@@ -1,0 +1,2 @@
+# bsmysql
+一个MYSQL数据库的常用操作封装，操作方式类似THINKPHP的数据库操作
