@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha test/test.js",
-    "doc": "jsdoc2md libs/mysql.js > docs/mysql.md && jsdoc2md libs/mysql.js >> README.md"
+    "doc": "jsdoc2md libs/mysql.js > docs/mysql.md"
   },
   "keywords": [
     "mysql",

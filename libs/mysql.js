@@ -82,19 +82,29 @@ class Mysql {
    * 设置需要选取的字段，字符串或数组格式
    * @param {string|Array} fields 需要选取的字段
    * 		1、'a, b, c'
-   * 		2、['a', 'b', {'c': 'd'}]
+   * 		2、['a', 'b as e', {'c': 'd'}]
    * @return {Mysql} 实例
    */
   field(fields) {
     const type = typeOf(fields);
     if (type === 'string') {
-      this._fields = [ fields ];
+      fields = fields.split(',');
     } else if (type === 'array') {
-      this._fields = fields;
+      
     } else {
       console.warn('[bsmysql] function field params must be type of "string" or "array"');
-      this._fields = [ '*' ];
+      fields = [ '*' ];
     }
+    const res = [];
+    fields.forEach(item => {
+      if (typeOf(item) === 'object') {
+        res.push(item);
+      } else if (typeOf(item) === 'string') {
+        item = item.trim();
+        item && res.push(item);
+      }
+    });
+    this._fields = res;
     return this;
   }
 
@@ -133,14 +143,10 @@ class Mysql {
       return this;
     }
     if (type === 'object') {
-      let length = 0;
-      // eslint-disable-next-line no-unused-vars
-      for (const i in where) {
-        length++;
-      }
-      where.length = length;
+      this._where = { ...this._where, ...where };
+    } else {
+      this._where._sql.push(where);
     }
-    this._where = { ...this._where, ...where };
     return this;
   }
 
@@ -424,7 +430,7 @@ class Mysql {
     this._tableName = '';
     this._tableAlias = '';
     this._fields = [ '*' ];
-    this._where = {};
+    this._where = { _sql: [] };
     this._limit = '';
     this._order = '';
     this._join = {};
@@ -527,25 +533,26 @@ class Mysql {
    * @return {string} where条件的拼接结果
    */
   _formatWhere() {
-    let sql = ' ';
+    let sql = '';
+    if (this._where._sql && typeOf(this._where._sql) === 'array') {
+      const arrSql = this._where._sql.join(' AND ');
+      sql += arrSql ? ' where ' + arrSql : '';
+      delete this._where._sql;
+    }
+    if (!isEmptyObject(this._where)) {
+      sql += sql ? '' : ' where ';
 
-    if (typeOf(this._where) === 'string') {
-      sql += 'where ' + this._where;
-    } else if (!isEmptyObject(this._where)) {
+      let index = 0;
 
-      sql += 'where ';
-      const length = this._where.length || 1;
-      let index = 1;
-      delete this._where.length;
-
-      for (let i in this._where) {
-        const item = this._where[i];
+      for (let fieldName in this._where) {
+        const item = this._where[fieldName];
         let _logic = 'AND';
+        let whereSql = '';
 
-        i = this._formatFieldsName(i);
+        fieldName = this._formatFieldsName(fieldName);
 
         if (typeOf(item) !== 'object') {
-          sql += i + ' = \'' + item + '\'';
+          whereSql = fieldName + ' = \'' + item + '\'';
         } else if (typeOf(item) === 'object') {
           if (item._logic) {
             _logic = item._logic;
@@ -560,12 +567,12 @@ class Mysql {
             delete item._isSql;
           }
           for (const ti in item) {
-            sql += i + ' ' + ti + ' ' + separatorL + item[ti] + separatorR;
+            whereSql = fieldName + ' ' + ti + ' ' + separatorL + item[ti] + separatorR;
             break;
           }
 
         }
-        sql += index !== length ? ' ' + _logic + ' ' : '';
+        sql += (index === 0 ? '' : ' ' + _logic + ' ') + whereSql;
         index++;
       }
     }
