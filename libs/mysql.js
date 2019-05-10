@@ -3,7 +3,14 @@
 const { createConnection } = require('mysql');
 const { typeOf, isEmptyObject } = require('../utils/util');
 
+/**
+ * Mysql数据库实例，封装了常用操作方式
+ */
 class Mysql {
+  /**
+   * 创建Mysql实例
+   * @param {object} config 数据库连接配置
+   */
   constructor(config) {
     this.config = {
       host: '',
@@ -228,7 +235,7 @@ class Mysql {
   /**
    * 查找一条数据
    * @param {object|string} where where条件
-   * @return {any} 查询结果
+   * @return {Promise<any>} 查询结果
    */
   async find(where = null) {
     where && this.where(where);
@@ -240,7 +247,7 @@ class Mysql {
   /**
    * 查找数据
    * @param {object|string} where where条件
-   * @return {any} 查询结果
+   * @return {Promise<any>} 查询结果
    */
   select(where = null) {
     if (!this._tableName) {
@@ -270,7 +277,7 @@ class Mysql {
   /**
    * 更新操作
    * @param {object} collum {name: value} 更新的字段与值
-   * @return {any} 更新结果
+   * @return {Promise<any>} 更新结果
    */
   update(collum) {
     if (!this._tableName) {
@@ -301,7 +308,7 @@ class Mysql {
    * 自增操作
    * @param {string} field 字段名
    * @param {number} step 自增数，默认1
-   * @return {any} 更新结果
+   * @return {Promise<any>} 更新结果
    */
   increase(field, step = 1) {
     const item = {};
@@ -313,7 +320,7 @@ class Mysql {
    * 自减操作
    * @param {string} field 字段名
    * @param {number} step 自减数，默认1
-   * @return {any} 更新结果
+   * @return {Promise<any>} 更新结果
    */
   decrement(field, step = 1) {
     const item = {};
@@ -325,7 +332,7 @@ class Mysql {
    * 新增数据
    * @param {object} collum 列字段
    * @param {object} duplicate 出现重复则更新，{key : 'c', value : VALUES('123')}
-   * @return {any} 操作结果
+   * @return {Promise<any>} 操作结果
    */
   add(collum, duplicate = false) {
     if (!this._tableName) {
@@ -356,6 +363,7 @@ class Mysql {
 
   /**
    * 删除操作，彻底删除一条数据，一般不建议删除数据，可以通过字段开关控制
+   * @return {Promise<any>} 操作结果
    */
   delete() {
     if (!this._tableName) {
@@ -369,6 +377,7 @@ class Mysql {
 
   /**
    * 获取数据连接
+   * @return {Mysql.connection} 数据库连接对象
    */
   _getConnection() {
     const connection = createConnection(this.config);
@@ -392,6 +401,7 @@ class Mysql {
 
   /**
    * 获取数据库连接对象
+   * @return {void}
    */
   _connect() {
     this.conn = this._getConnection();
@@ -399,6 +409,7 @@ class Mysql {
 
   /**
    * 关闭数据库连接
+   * @return {void}
    */
   _close() {
     this.conn.end();
@@ -407,6 +418,7 @@ class Mysql {
 
   /**
    * 重置查询条件，每次查询完必须重置
+   * @return {void}
    */
   _resetParams() {
     this._tableName = '';
@@ -562,6 +574,7 @@ class Mysql {
 
   /**
    * 打印生成的sql语句，用于调试
+   * @return {string} 生成的sql语句
    */
   _sql() {
     return this.sql;
