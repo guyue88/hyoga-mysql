@@ -201,6 +201,8 @@ class Mysql {
   /**
    * 排序
    * @param {array|string} order 排序
+   *  1、id desc, time asc
+   *  2、[ 'id desc', 'time asc']
    * @return {Mysql} 实例
    */
   order(order) {
@@ -283,12 +285,14 @@ class Mysql {
   /**
    * 更新操作
    * @param {object} collum {name: value} 更新的字段与值
+   * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  update(collum) {
+  update(collum, where = null) {
     if (!this._tableName) {
       throw new Error('unknow table name!');
     }
+    where && this.where(where);
     let sql = 'UPDATE ';
     sql += this._tableName;
     sql += this._tableAlias ? ` as ${this._tableAlias} SET ` : ' SET ';
@@ -369,12 +373,14 @@ class Mysql {
 
   /**
    * 删除操作，彻底删除一条数据，一般不建议删除数据，可以通过字段开关控制
+   * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 操作结果
    */
-  delete() {
+  delete(where) {
     if (!this._tableName) {
       throw new Error('unknow table name!');
     }
+    where && this.where(where);
     let sql = 'DELETE FROM ' + this._tableName;
     sql += this._formatWhere();
     this.sql = sql;
@@ -570,7 +576,6 @@ class Mysql {
             whereSql = fieldName + ' ' + ti + ' ' + separatorL + item[ti] + separatorR;
             break;
           }
-
         }
         sql += (index === 0 ? '' : ' ' + _logic + ' ') + whereSql;
         index++;
