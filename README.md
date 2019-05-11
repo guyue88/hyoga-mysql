@@ -1,8 +1,25 @@
-# bsmysql
-一个MYSQL数据库的常用操作封装，操作方式类似THINKPHP的数据库操作
-<a name="Mysql"></a>
+# hyoga-mysql
+一个MYSQL数据库的常用操作封装，操作方式类似THINKPHP的数据库操作  
 
-## Mysql
+## 安装
+```javascriipt
+npm i @hyoga/mysql
+```
+## 使用
+```javascriipt
+const mysql = require('@hyoga/mysql');
+const inst = new mysql({
+  host: '127.0.0.1',
+  user: 'root',
+  password: '',
+  database: 'test-db',
+  port: 3306,
+});
+const users = await inst.table('user').where({ status: 1 }).select();
+console.log(users);
+```
+
+## API
 Mysql数据库实例，封装了常用操作方式
 
 **Kind**: global class  

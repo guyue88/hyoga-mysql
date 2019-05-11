@@ -5,8 +5,8 @@ const chai = require('chai') ,
 const config = {
   host: '127.0.0.1',
   user: 'root',
-  password: 'luo1872053',
-  database: 'pet-cms',
+  password: '',
+  database: 'test-db',
   port: 3306,
 };
 const mysql = new Mysql(config);
