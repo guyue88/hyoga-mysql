@@ -29,6 +29,8 @@ describe('find row', function() {
 
   it ('when {where} was set should return correct row', async function() {
     const data = await mysql.table('admins').find({ id: 1 });
+    _sql = mysql._sql();
+    console.log(_sql);
     expect(data).to.have.any.keys({ id: 1 });
   });
 });
@@ -48,10 +50,81 @@ describe('select rows', function() {
 
 describe('where', function() {
   it ('when {where} was set should return correct row(s)', async function() {
-    const data1 = await mysql.table('admins').where({ status: 'on' }).find();
-    expect(data1).to.have.any.keys({ id: 1 });
-    const data2 = await mysql.table('article_catgorys').where({ id: { '>': 1 } }).find();
-    expect(data2.id).to.be.above(1);
+    await mysql.table('admins').where({ status: 'on' }).find();
+    const sql1 = mysql._sql();
+    expect(sql1).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') limit 1");
+
+    await mysql.table('admins').where('id = 10 OR id < 2').find();
+    const sql2 = mysql._sql();
+    expect(sql2).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (id = 10 OR id < 2) limit 1");
+
+    await mysql.table('admins').where({id: ['!=', 1]}).find();
+    const sql3 = mysql._sql();
+    expect(sql3).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` != 1) limit 1");
+
+    await mysql.table('admins').where({id: null}).find();
+    const sql4 = mysql._sql();
+    expect(sql4).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NULL) limit 1");
+
+    await mysql.table('admins').where({id: [ '!=', null ]}).find();
+    const sql5 = mysql._sql();
+    expect(sql5).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NOT NULL) limit 1");
+
+    await mysql.table('admins').where({name: [ 'like', '%admin%' ]}).find();
+    const sql6 = mysql._sql();
+    expect(sql6).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%') limit 1");
+
+    await mysql.table('admins').where({name: [ '=', [ 'admin', 'editor' ] ]}).find();
+    const sql7 = mysql._sql();
+    expect(sql7).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` = 'admin' OR `admins`.`name` = 'editor') limit 1");
+
+    await mysql.table('admins').where({name: [ 'notlike', '%admin%' ]}).find();
+    const sql8 = mysql._sql();
+    expect(sql8).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` NOT LIKE '%admin%') limit 1");
+
+    await mysql.table('admins').where({'name|email': [ 'like', '%admin%' ]}).find();
+    const sql9 = mysql._sql();
+    expect(sql9).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' OR `admins`.`email` LIKE '%admin%') limit 1");
+
+    await mysql.table('admins').where({'name&email': [ 'like', '%admin%' ]}).find();
+    const sql10 = mysql._sql();
+    expect(sql10).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' AND `admins`.`email` LIKE '%admin%') limit 1");
+
+    await mysql.table('admins').where({'id': [ 'in', [5, 10] ]}).find();
+    const sql11 = mysql._sql();
+    expect(sql11).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5,10)) limit 1");
+
+    await mysql.table('admins').where({'id': [ 'in', '5, 10' ]}).find();
+    const sql12 = mysql._sql();
+    expect(sql12).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5, 10)) limit 1");
+
+    await mysql.table('admins').where({'id': [ 'notin', [5, 10] ]}).find();
+    const sql13 = mysql._sql();
+    expect(sql13).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` NOT IN (5,10)) limit 1");
+
+    await mysql.table('admins').where({'id': [ 'not in', [5, 10] ]}).find();
+    const sql14 = mysql._sql();
+    expect(sql14).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` NOT IN (5,10)) limit 1");
+
+    await mysql.table('admins').where({'id': [ 'between', [5, 10] ]}).find();
+    const sql15 = mysql._sql();
+    expect(sql15).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10) limit 1");
+
+    await mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin'}).find();
+    const sql16 = mysql._sql();
+    expect(sql16).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 AND `admins`.`name` = 'admin') limit 1");
+    
+    await mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin', '_logic': 'OR'}).find();
+    const sql17 = mysql._sql();
+    expect(sql17).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 OR `admins`.`name` = 'admin') limit 1");
+
+    await mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10}}).find();
+    const sql18 = mysql._sql();
+    expect(sql18).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 AND `admins`.`id` <= 10) limit 1");
+
+    await mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10, '_logic': 'OR'}}).find();
+    const sql19 = mysql._sql();
+    expect(sql19).to.be.eql("SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 OR `admins`.`id` <= 10) limit 1");
   });
 });
 
@@ -90,7 +163,7 @@ describe('order', function () {
 
 describe('join', function () {
   it('when {join} was set should only return correct join items', async function () {
-    const data1 = await mysql.table('article_post')
+    const data1 = await mysql.table('article_posts')
       .alias('a')
       .field([ 'a.*', 'b.*' ])
       .join({
@@ -101,7 +174,7 @@ describe('join', function () {
       })
       .find();
     expect(data1).to.include.keys('name');
-    const data2 = await mysql.table('article_post')
+    const data2 = await mysql.table('article_posts')
       .alias('a')
       .field([ 'a.*', 'article_catgorys.*' ])
       .join({

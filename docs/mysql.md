@@ -1,43 +1,63 @@
-<a name="Mysql"></a>
+<a name="module_@hyoga/mysql"></a>
 
-## Mysql
+## @hyoga/mysql
 Mysql数据库实例，封装了常用操作方式
 
-**Kind**: global class  
+**Author**: <lq9328@126.com>  
 
-* [Mysql](#Mysql)
-    * [new Mysql(config)](#new_Mysql_new)
-    * [.query(sql)](#Mysql+query) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.table(tableName)](#Mysql+table) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.alias(tableAlias)](#Mysql+alias) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.field(fields)](#Mysql+field) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.group(collums)](#Mysql+group) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.where(where)](#Mysql+where) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.limit(limit)](#Mysql+limit) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.page(page, pageSize)](#Mysql+page) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.data(data)](#Mysql+data) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.order(order)](#Mysql+order) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.join(join)](#Mysql+join) ⇒ [<code>Mysql</code>](#Mysql)
-    * [.find(where)](#Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.select(where)](#Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.update(collum)](#Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.increase(field, step)](#Mysql+increase) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.decrement(field, step)](#Mysql+decrement) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.add(collum, duplicate)](#Mysql+add) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.delete()](#Mysql+delete) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [._getConnection()](#Mysql+_getConnection) ⇒ <code>Mysql.connection</code>
-    * [._connect()](#Mysql+_connect) ⇒ <code>void</code>
-    * [._close()](#Mysql+_close) ⇒ <code>void</code>
-    * [._resetParams()](#Mysql+_resetParams) ⇒ <code>void</code>
-    * [._formatFields()](#Mysql+_formatFields) ⇒ <code>string</code>
-    * [._formatFieldsName(field)](#Mysql+_formatFieldsName) ⇒ <code>string</code>
-    * [._formatJoin()](#Mysql+_formatJoin) ⇒ <code>string</code>
-    * [._formatWhere()](#Mysql+_formatWhere) ⇒ <code>string</code>
-    * [._sql()](#Mysql+_sql) ⇒ <code>string</code>
+* [@hyoga/mysql](#module_@hyoga/mysql)
+    * [~Mysql](#module_@hyoga/mysql..Mysql)
+        * [new Mysql(config)](#new_module_@hyoga/mysql..Mysql_new)
+        * [.query(sql)](#module_@hyoga/mysql..Mysql+query) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.table(tableName)](#module_@hyoga/mysql..Mysql+table) ⇒ <code>Mysql</code>
+        * [.alias(tableAlias)](#module_@hyoga/mysql..Mysql+alias) ⇒ <code>Mysql</code>
+        * [.field(fields)](#module_@hyoga/mysql..Mysql+field) ⇒ <code>Mysql</code>
+        * [.group(collums)](#module_@hyoga/mysql..Mysql+group) ⇒ <code>Mysql</code>
+        * [.where(where)](#module_@hyoga/mysql..Mysql+where) ⇒ <code>Mysql</code>
+        * [.limit(limit)](#module_@hyoga/mysql..Mysql+limit) ⇒ <code>Mysql</code>
+        * [.page(page, pageSize)](#module_@hyoga/mysql..Mysql+page) ⇒ <code>Mysql</code>
+        * [.data(data)](#module_@hyoga/mysql..Mysql+data) ⇒ <code>Mysql</code>
+        * [.order(order)](#module_@hyoga/mysql..Mysql+order) ⇒ <code>Mysql</code>
+        * [.join(join)](#module_@hyoga/mysql..Mysql+join) ⇒ <code>Mysql</code>
+        * [.find(where)](#module_@hyoga/mysql..Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.select(where)](#module_@hyoga/mysql..Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.update(collum, where)](#module_@hyoga/mysql..Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.increase(field, step)](#module_@hyoga/mysql..Mysql+increase) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.decrement(field, step)](#module_@hyoga/mysql..Mysql+decrement) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.add(collum, duplicate)](#module_@hyoga/mysql..Mysql+add) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.delete(where)](#module_@hyoga/mysql..Mysql+delete) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [._sql()](#module_@hyoga/mysql..Mysql+_sql) ⇒ <code>string</code>
 
-<a name="new_Mysql_new"></a>
+<a name="module_@hyoga/mysql..Mysql"></a>
 
-### new Mysql(config)
+### @hyoga/mysql~Mysql
+**Kind**: inner class of [<code>@hyoga/mysql</code>](#module_@hyoga/mysql)  
+
+* [~Mysql](#module_@hyoga/mysql..Mysql)
+    * [new Mysql(config)](#new_module_@hyoga/mysql..Mysql_new)
+    * [.query(sql)](#module_@hyoga/mysql..Mysql+query) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.table(tableName)](#module_@hyoga/mysql..Mysql+table) ⇒ <code>Mysql</code>
+    * [.alias(tableAlias)](#module_@hyoga/mysql..Mysql+alias) ⇒ <code>Mysql</code>
+    * [.field(fields)](#module_@hyoga/mysql..Mysql+field) ⇒ <code>Mysql</code>
+    * [.group(collums)](#module_@hyoga/mysql..Mysql+group) ⇒ <code>Mysql</code>
+    * [.where(where)](#module_@hyoga/mysql..Mysql+where) ⇒ <code>Mysql</code>
+    * [.limit(limit)](#module_@hyoga/mysql..Mysql+limit) ⇒ <code>Mysql</code>
+    * [.page(page, pageSize)](#module_@hyoga/mysql..Mysql+page) ⇒ <code>Mysql</code>
+    * [.data(data)](#module_@hyoga/mysql..Mysql+data) ⇒ <code>Mysql</code>
+    * [.order(order)](#module_@hyoga/mysql..Mysql+order) ⇒ <code>Mysql</code>
+    * [.join(join)](#module_@hyoga/mysql..Mysql+join) ⇒ <code>Mysql</code>
+    * [.find(where)](#module_@hyoga/mysql..Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.select(where)](#module_@hyoga/mysql..Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.update(collum, where)](#module_@hyoga/mysql..Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.increase(field, step)](#module_@hyoga/mysql..Mysql+increase) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.decrement(field, step)](#module_@hyoga/mysql..Mysql+decrement) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.add(collum, duplicate)](#module_@hyoga/mysql..Mysql+add) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.delete(where)](#module_@hyoga/mysql..Mysql+delete) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [._sql()](#module_@hyoga/mysql..Mysql+_sql) ⇒ <code>string</code>
+
+<a name="new_module_@hyoga/mysql..Mysql_new"></a>
+
+#### new Mysql(config)
 创建Mysql实例
 
 
@@ -45,181 +65,279 @@ Mysql数据库实例，封装了常用操作方式
 | --- | --- | --- |
 | config | <code>object</code> | 数据库连接配置 |
 
-<a name="Mysql+query"></a>
+<a name="module_@hyoga/mysql..Mysql+query"></a>
 
-### mysql.query(sql) ⇒ <code>Promise.&lt;any&gt;</code>
+#### mysql.query(sql) ⇒ <code>Promise.&lt;any&gt;</code>
 直接执行sql语句
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - sql执行结果  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | sql | <code>string</code> | sql语句 |
 
-<a name="Mysql+table"></a>
+<a name="module_@hyoga/mysql..Mysql+table"></a>
 
-### mysql.table(tableName) ⇒ [<code>Mysql</code>](#Mysql)
+#### mysql.table(tableName) ⇒ <code>Mysql</code>
 设置表名
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | tableName | <code>string</code> | 表名 |
 
-<a name="Mysql+alias"></a>
+<a name="module_@hyoga/mysql..Mysql+alias"></a>
 
-### mysql.alias(tableAlias) ⇒ [<code>Mysql</code>](#Mysql)
+#### mysql.alias(tableAlias) ⇒ <code>Mysql</code>
 设置表的别名
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | tableAlias | <code>string</code> | 主表别名 |
 
-<a name="Mysql+field"></a>
+<a name="module_@hyoga/mysql..Mysql+field"></a>
 
-### mysql.field(fields) ⇒ [<code>Mysql</code>](#Mysql)
+#### mysql.field(fields) ⇒ <code>Mysql</code>
 设置需要选取的字段，字符串或数组格式
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| fields | <code>string</code> \| <code>Array</code> | 需要选取的字段 		1、'a, b, c' 		2、['a', 'b', {'c': 'd'}] |
+| fields | <code>string</code> \| <code>Array</code> | 需要选取的字段 |
 
-<a name="Mysql+group"></a>
+**Example**  
+```js
+// SELECT `admins`.`id`, `admins`.`name` FROM `admins` limit 1
+mysql.table('admins').field('id, name').find();
+// SELECT `admins`.`id`, `admins`.`name` as a, `admins`.`status` as b FROM `admins` limit 1
+mysql.table('admins').field(['id', 'name as a', { status: 'b' }]).find();
+```
+<a name="module_@hyoga/mysql..Mysql+group"></a>
 
-### mysql.group(collums) ⇒ [<code>Mysql</code>](#Mysql)
+#### mysql.group(collums) ⇒ <code>Mysql</code>
 group by 操作
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | collums | <code>Array</code> \| <code>string</code> | 分组列名，可为数组或字符串，字符串以逗号分隔 |
 
-<a name="Mysql+where"></a>
+<a name="module_@hyoga/mysql..Mysql+where"></a>
 
-### mysql.where(where) ⇒ [<code>Mysql</code>](#Mysql)
-where条件设置
+#### mysql.where(where) ⇒ <code>Mysql</code>
+where条件设置，接受字符串或者对象形式，可以多次调用，每次调用都作为一个整体，多次调用使用 AND 连接
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| where | <code>object</code> \| <code>string</code> | where条件  'field = 10'  {'field': 10} 	{'field': {">":10}},{'field': {"like":10}} 	{'field': {">":10,'_logic':'or'}} 	{'field': {"=": 'select id from a where name="zhangsan"','_isSql':true}} |
+| where | <code>object</code> \| <code>string</code> | where条件 |
 
-<a name="Mysql+limit"></a>
+**Example**  
+```js
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') limit 1
+mysql.table('admins').where({ status: 'on' }).find();
 
-### mysql.limit(limit) ⇒ [<code>Mysql</code>](#Mysql)
+// SELECT `admins`.`*` FROM `admins` WHERE (id = 10 OR id < 2) limit 1
+mysql.table('admins').where('id = 10 OR id < 2').find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` != 1) limit 1
+mysql.table('admins').where({id: ['!=', 1]}).find();
+
+// NULL操作
+
+SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NULL) limit 1
+mysql.table('admins').where({id: null}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NOT NULL) limit 1
+mysql.table('admins').where({id: [ '!=', null ]}).find();
+
+// LIKE 操作
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%') limit 1
+mysql.table('admins').where({name: [ 'like', '%admin%' ]}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` NOT LIKE '%admin%') limit 1
+mysql.table('admins').where({name: [ 'notlike', '%admin%' ]}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' OR `admins`.`email` LIKE '%admin%') limit 1
+mysql.table('admins').where({'name|email': [ 'like', '%admin%' ]}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' AND `admins`.`email` LIKE '%admin%') limit 1
+mysql.table('admins').where({'name&email': [ 'like', '%admin%' ]}).find();
+
+// 一对多操作
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` = 'admin' OR `admins`.`name` = 'editor') limit 1
+mysql.table('admins').where({name: [ '=', [ 'admin', 'editor' ] ]}).find();
+
+// IN 操作
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5,10)) limit 1
+mysql.table('admins').where({'id': [ 'in', [5, 10] ]}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5, 10)) limit 1
+mysql.table('admins').where({'id': [ 'in', '5, 10' ]}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` NOT IN (5,10)) limit 1
+mysql.table('admins').where({'id': [ 'notin', [5, 10] ]}).find();
+
+// BETWEEN 操作
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10) limit 1
+mysql.table('admins').where({'id': [ 'between', [5, 10] ]}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 AND `admins`.`name` = 'admin') limit 1
+mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin'}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 OR `admins`.`name` = 'admin') limit 1 
+mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin', '_logic': 'OR'}).find();
+
+// 多字段操作
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 AND `admins`.`id` <= 10) limit 1
+mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10}}).find();
+
+// SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 OR `admins`.`id` <= 10) limit 1
+mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10, '_logic': 'OR'}}).find();
+```
+<a name="module_@hyoga/mysql..Mysql+limit"></a>
+
+#### mysql.limit(limit) ⇒ <code>Mysql</code>
 设置结果的条数限制
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | limit | <code>number</code> | 结果的条数限制 |
 
-<a name="Mysql+page"></a>
+<a name="module_@hyoga/mysql..Mysql+page"></a>
 
-### mysql.page(page, pageSize) ⇒ [<code>Mysql</code>](#Mysql)
+#### mysql.page(page, pageSize) ⇒ <code>Mysql</code>
 分页操作
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | page | <code>number</code> | <code>1</code> | 当前页数 |
 | pageSize | <code>number</code> | <code>1</code> | 每页大小 |
 
-<a name="Mysql+data"></a>
+<a name="module_@hyoga/mysql..Mysql+data"></a>
 
-### mysql.data(data) ⇒ [<code>Mysql</code>](#Mysql)
+#### mysql.data(data) ⇒ <code>Mysql</code>
 设置数据
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | data | <code>object</code> | 数据 |
 
-<a name="Mysql+order"></a>
+<a name="module_@hyoga/mysql..Mysql+order"></a>
 
-### mysql.order(order) ⇒ [<code>Mysql</code>](#Mysql)
+#### mysql.order(order) ⇒ <code>Mysql</code>
 排序
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | order | <code>array</code> \| <code>string</code> | 排序 |
 
-<a name="Mysql+join"></a>
+**Example**  
+```js
+// SELECT `article_catgorys`.`*` FROM `article_catgorys` ORDER BY id desc
+mysql.table('article_catgorys').order('id desc').select();
 
-### mysql.join(join) ⇒ [<code>Mysql</code>](#Mysql)
+//SELECT `article_catgorys`.`*` FROM `article_catgorys` ORDER BY id desc, name asc
+mysql.table('article_catgorys').order([ 'id desc', 'name asc' ]).select();
+```
+<a name="module_@hyoga/mysql..Mysql+join"></a>
+
+#### mysql.join(join) ⇒ <code>Mysql</code>
 设置join条件，可以多次join
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: [<code>Mysql</code>](#Mysql) - 实例  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Mysql</code> - 实例  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| join | <code>object</code> | join条件 {   cate: {   	 join: "left", // 有 left、right和inner 3 个值，默认left     as: "c",     on: { id: "id", uid: "uid" }   } } |
+| join | <code>object</code> | join条件 |
 
-<a name="Mysql+find"></a>
+**Example**  
+```js
+// SELECT `a`.`*`, `b`.`*` FROM `article_posts` as a LEFT JOIN `article_catgorys` AS b ON (a.`catgory_id`=b.`id`) limit 1
+mysql.table('article_posts').alias('a').field([ 'a.*', 'b.*' ]).join({
+ article_catgorys: {
+   as: 'b',
+   on: { catgory_id: 'id' }
+ }
+}).find();
 
-### mysql.find(where) ⇒ <code>Promise.&lt;any&gt;</code>
+// SELECT `a`.`*`, `article_catgorys`.`*` FROM `article_posts` as a LEFT JOIN `article_catgorys` ON (a.`catgory_id`=article_catgorys.`id`) limit 1
+mysql.table('article_posts').alias('a').field([ 'a.*', 'article_catgorys.*' ]).join({
+ article_catgorys: {
+   // as: 'b',
+   on: { catgory_id: 'id' }
+ }
+}).find();
+```
+<a name="module_@hyoga/mysql..Mysql+find"></a>
+
+#### mysql.find(where) ⇒ <code>Promise.&lt;any&gt;</code>
 查找一条数据
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - 查询结果  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | where | <code>object</code> \| <code>string</code> | <code></code> | where条件 |
 
-<a name="Mysql+select"></a>
+<a name="module_@hyoga/mysql..Mysql+select"></a>
 
-### mysql.select(where) ⇒ <code>Promise.&lt;any&gt;</code>
+#### mysql.select(where) ⇒ <code>Promise.&lt;any&gt;</code>
 查找数据
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - 查询结果  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | where | <code>object</code> \| <code>string</code> | <code></code> | where条件 |
 
-<a name="Mysql+update"></a>
+<a name="module_@hyoga/mysql..Mysql+update"></a>
 
-### mysql.update(collum) ⇒ <code>Promise.&lt;any&gt;</code>
+#### mysql.update(collum, where) ⇒ <code>Promise.&lt;any&gt;</code>
 更新操作
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - 更新结果  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| collum | <code>object</code> | {name: value} 更新的字段与值 |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| collum | <code>object</code> |  | {name: value} 更新的字段与值 |
+| where | <code>object</code> \| <code>string</code> | <code></code> | where条件，参见[where]方法 |
 
-<a name="Mysql+increase"></a>
+<a name="module_@hyoga/mysql..Mysql+increase"></a>
 
-### mysql.increase(field, step) ⇒ <code>Promise.&lt;any&gt;</code>
+#### mysql.increase(field, step) ⇒ <code>Promise.&lt;any&gt;</code>
 自增操作
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - 更新结果  
 
 | Param | Type | Default | Description |
@@ -227,12 +345,12 @@ where条件设置
 | field | <code>string</code> |  | 字段名 |
 | step | <code>number</code> | <code>1</code> | 自增数，默认1 |
 
-<a name="Mysql+decrement"></a>
+<a name="module_@hyoga/mysql..Mysql+decrement"></a>
 
-### mysql.decrement(field, step) ⇒ <code>Promise.&lt;any&gt;</code>
+#### mysql.decrement(field, step) ⇒ <code>Promise.&lt;any&gt;</code>
 自减操作
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - 更新结果  
 
 | Param | Type | Default | Description |
@@ -240,88 +358,35 @@ where条件设置
 | field | <code>string</code> |  | 字段名 |
 | step | <code>number</code> | <code>1</code> | 自减数，默认1 |
 
-<a name="Mysql+add"></a>
+<a name="module_@hyoga/mysql..Mysql+add"></a>
 
-### mysql.add(collum, duplicate) ⇒ <code>Promise.&lt;any&gt;</code>
+#### mysql.add(collum, duplicate) ⇒ <code>Promise.&lt;any&gt;</code>
 新增数据
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - 操作结果  
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| collum | <code>object</code> |  | 列字段 |
+| collum | <code>object</code> |  | 字段键值对 |
 | duplicate | <code>object</code> | <code>false</code> | 出现重复则更新，{key : 'c', value : VALUES('123')} |
 
-<a name="Mysql+delete"></a>
+<a name="module_@hyoga/mysql..Mysql+delete"></a>
 
-### mysql.delete() ⇒ <code>Promise.&lt;any&gt;</code>
+#### mysql.delete(where) ⇒ <code>Promise.&lt;any&gt;</code>
 删除操作，彻底删除一条数据，一般不建议删除数据，可以通过字段开关控制
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>Promise.&lt;any&gt;</code> - 操作结果  
-<a name="Mysql+_getConnection"></a>
-
-### mysql.\_getConnection() ⇒ <code>Mysql.connection</code>
-获取数据连接
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: <code>Mysql.connection</code> - 数据库连接对象  
-<a name="Mysql+_connect"></a>
-
-### mysql.\_connect() ⇒ <code>void</code>
-获取数据库连接对象
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-<a name="Mysql+_close"></a>
-
-### mysql.\_close() ⇒ <code>void</code>
-关闭数据库连接
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-<a name="Mysql+_resetParams"></a>
-
-### mysql.\_resetParams() ⇒ <code>void</code>
-重置查询条件，每次查询完必须重置
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-<a name="Mysql+_formatFields"></a>
-
-### mysql.\_formatFields() ⇒ <code>string</code>
-需要选择的字段名处理
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: <code>string</code> - 需要选择的字段拼接结果  
-<a name="Mysql+_formatFieldsName"></a>
-
-### mysql.\_formatFieldsName(field) ⇒ <code>string</code>
-字段名处理，添加``，防止报错
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: <code>string</code> - 字段名处理结果  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| field | <code>string</code> | 字段名 |
+| where | <code>object</code> \| <code>string</code> | where条件，参见[where]方法 |
 
-<a name="Mysql+_formatJoin"></a>
+<a name="module_@hyoga/mysql..Mysql+_sql"></a>
 
-### mysql.\_formatJoin() ⇒ <code>string</code>
-join操作处理，转变为join语句
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: <code>string</code> - join操作的拼接结果  
-<a name="Mysql+_formatWhere"></a>
-
-### mysql.\_formatWhere() ⇒ <code>string</code>
-where条件处理
-
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
-**Returns**: <code>string</code> - where条件的拼接结果  
-<a name="Mysql+_sql"></a>
-
-### mysql.\_sql() ⇒ <code>string</code>
+#### mysql.\_sql() ⇒ <code>string</code>
 打印生成的sql语句，用于调试
 
-**Kind**: instance method of [<code>Mysql</code>](#Mysql)  
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
 **Returns**: <code>string</code> - 生成的sql语句  

@@ -5,6 +5,8 @@ const { typeOf, isEmptyObject } = require('../utils/util');
 
 /**
  * Mysql数据库实例，封装了常用操作方式
+ * @module @hyoga/mysql
+ * @author <lq9328@126.com>
  */
 class Mysql {
   /**
@@ -81,8 +83,11 @@ class Mysql {
   /**
    * 设置需要选取的字段，字符串或数组格式
    * @param {string|Array} fields 需要选取的字段
-   * 		1、'a, b, c'
-   * 		2、['a', 'b as e', {'c': 'd'}]
+   * @example 
+   * // SELECT `admins`.`id`, `admins`.`name` FROM `admins` limit 1
+   * mysql.table('admins').field('id, name').find();
+   * // SELECT `admins`.`id`, `admins`.`name` as a, `admins`.`status` as b FROM `admins` limit 1
+   * mysql.table('admins').field(['id', 'name as a', { status: 'b' }]).find();
    * @return {Mysql} 实例
    */
   field(fields) {
@@ -127,13 +132,71 @@ class Mysql {
   }
 
   /**
-   * where条件设置
+   * where条件设置，接受字符串或者对象形式，可以多次调用，每次调用都作为一个整体，多次调用使用 AND 连接
    * @param {object|string} where where条件
-   *  'field = 10'
-   *  {'field': 10}
-   *	{'field': {">":10}},{'field': {"like":10}}
-   *	{'field': {">":10,'_logic':'or'}}
-   *	{'field': {"=": 'select id from a where name="zhangsan"','_isSql':true}}
+   * @example
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') limit 1
+   * mysql.table('admins').where({ status: 'on' }).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (id = 10 OR id < 2) limit 1
+   * mysql.table('admins').where('id = 10 OR id < 2').find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` != 1) limit 1
+   * mysql.table('admins').where({id: ['!=', 1]}).find();
+   * 
+   * // NULL操作
+   * 
+   * SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NULL) limit 1
+   * mysql.table('admins').where({id: null}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NOT NULL) limit 1
+   * mysql.table('admins').where({id: [ '!=', null ]}).find();
+   * 
+   * // LIKE 操作
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%') limit 1
+   * mysql.table('admins').where({name: [ 'like', '%admin%' ]}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` NOT LIKE '%admin%') limit 1
+   * mysql.table('admins').where({name: [ 'notlike', '%admin%' ]}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' OR `admins`.`email` LIKE '%admin%') limit 1
+   * mysql.table('admins').where({'name|email': [ 'like', '%admin%' ]}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' AND `admins`.`email` LIKE '%admin%') limit 1
+   * mysql.table('admins').where({'name&email': [ 'like', '%admin%' ]}).find();
+   * 
+   * // 一对多操作
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` = 'admin' OR `admins`.`name` = 'editor') limit 1
+   * mysql.table('admins').where({name: [ '=', [ 'admin', 'editor' ] ]}).find();
+   * 
+   * // IN 操作
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5,10)) limit 1
+   * mysql.table('admins').where({'id': [ 'in', [5, 10] ]}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5, 10)) limit 1
+   * mysql.table('admins').where({'id': [ 'in', '5, 10' ]}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` NOT IN (5,10)) limit 1
+   * mysql.table('admins').where({'id': [ 'notin', [5, 10] ]}).find();
+   * 
+   * // BETWEEN 操作
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10) limit 1
+   * mysql.table('admins').where({'id': [ 'between', [5, 10] ]}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 AND `admins`.`name` = 'admin') limit 1
+   * mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin'}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 OR `admins`.`name` = 'admin') limit 1 
+   * mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin', '_logic': 'OR'}).find();
+   * 
+   * // 多字段操作
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 AND `admins`.`id` <= 10) limit 1
+   * mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10}}).find();
+   * 
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 OR `admins`.`id` <= 10) limit 1
+   * mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10, '_logic': 'OR'}}).find();
+   * 
    * @return {Mysql} 实例
    */
   where(where) {
@@ -143,7 +206,7 @@ class Mysql {
       return this;
     }
     if (type === 'object') {
-      this._where = { ...this._where, ...where };
+      this._where._condition.push(where);
     } else {
       this._where._sql.push(where);
     }
@@ -201,8 +264,13 @@ class Mysql {
   /**
    * 排序
    * @param {array|string} order 排序
-   *  1、id desc, time asc
-   *  2、[ 'id desc', 'time asc']
+   * @example
+   * // SELECT `article_catgorys`.`*` FROM `article_catgorys` ORDER BY id desc
+   * mysql.table('article_catgorys').order('id desc').select();
+   * 
+   * //SELECT `article_catgorys`.`*` FROM `article_catgorys` ORDER BY id desc, name asc
+   * mysql.table('article_catgorys').order([ 'id desc', 'name asc' ]).select();
+   * 
    * @return {Mysql} 实例
    */
   order(order) {
@@ -221,13 +289,23 @@ class Mysql {
   /**
    * 设置join条件，可以多次join
    * @param {object} join join条件
-   * {
-   *   cate: {
-   *   	 join: "left", // 有 left、right和inner 3 个值，默认left
-   *     as: "c",
-   *     on: { id: "id", uid: "uid" }
-   *   }
-   * }
+   * @example
+   * // SELECT `a`.`*`, `b`.`*` FROM `article_posts` as a LEFT JOIN `article_catgorys` AS b ON (a.`catgory_id`=b.`id`) limit 1
+   * mysql.table('article_posts').alias('a').field([ 'a.*', 'b.*' ]).join({
+   *  article_catgorys: {
+   *    as: 'b',
+   *    on: { catgory_id: 'id' }
+   *  }
+   * }).find();
+   *
+   * // SELECT `a`.`*`, `article_catgorys`.`*` FROM `article_posts` as a LEFT JOIN `article_catgorys` ON (a.`catgory_id`=article_catgorys.`id`) limit 1
+   * mysql.table('article_posts').alias('a').field([ 'a.*', 'article_catgorys.*' ]).join({
+   *  article_catgorys: {
+   *    // as: 'b',
+   *    on: { catgory_id: 'id' }
+   *  }
+   * }).find();
+   * 
    * @return {Mysql} 实例
    */
   join(join) {
@@ -340,7 +418,7 @@ class Mysql {
 
   /**
    * 新增数据
-   * @param {object} collum 列字段
+   * @param {object} collum 字段键值对
    * @param {object} duplicate 出现重复则更新，{key : 'c', value : VALUES('123')}
    * @return {Promise<any>} 操作结果
    */
@@ -389,6 +467,7 @@ class Mysql {
 
   /**
    * 获取数据连接
+   * @private
    * @return {Mysql.connection} 数据库连接对象
    */
   _getConnection() {
@@ -413,6 +492,7 @@ class Mysql {
 
   /**
    * 获取数据库连接对象
+   * @private
    * @return {void}
    */
   _connect() {
@@ -421,6 +501,7 @@ class Mysql {
 
   /**
    * 关闭数据库连接
+   * @private
    * @return {void}
    */
   _close() {
@@ -430,13 +511,14 @@ class Mysql {
 
   /**
    * 重置查询条件，每次查询完必须重置
+   * @private
    * @return {void}
    */
   _resetParams() {
     this._tableName = '';
     this._tableAlias = '';
     this._fields = [ '*' ];
-    this._where = { _sql: [] };
+    this._where = { _sql: [], _condition: [] };
     this._limit = '';
     this._order = '';
     this._join = {};
@@ -446,6 +528,7 @@ class Mysql {
 
   /**
    * 需要选择的字段名处理
+   * @private
    * @return {string} 需要选择的字段拼接结果
    */
   _formatFields() {
@@ -473,6 +556,7 @@ class Mysql {
 
   /**
    * 字段名处理，添加``，防止报错
+   * @private
    * @param {string} field 字段名
    * @return {string} 字段名处理结果
    */
@@ -502,6 +586,7 @@ class Mysql {
 
   /**
    * join操作处理，转变为join语句
+   * @private
    * @return {string} join操作的拼接结果
    */
   _formatJoin() {
@@ -526,7 +611,7 @@ class Mysql {
         if (typeOf(item.on) === 'string') {
           tmpArr.push(item.on);
         } else {
-          tmpArr.push(mainTable + '.`' + ti + '`=' + subTable + '.`' + item.on[ti] + '`');
+          tmpArr.push('`' + mainTable + '`.`' + ti + '`=`' + subTable + '`.`' + item.on[ti] + '`');
         }
       }
       joinStr += tmpArr.join(' AND ') + ')';
@@ -536,52 +621,152 @@ class Mysql {
 
   /**
    * where条件处理
+   * @private
    * @return {string} where条件的拼接结果
    */
   _formatWhere() {
-    let sql = '';
-    if (this._where._sql && typeOf(this._where._sql) === 'array') {
-      const arrSql = this._where._sql.join(' AND ');
-      sql += arrSql ? ' where ' + arrSql : '';
-      delete this._where._sql;
-    }
-    if (!isEmptyObject(this._where)) {
-      sql += sql ? '' : ' where ';
+    const sqlStr = this._where._sql.map(item => `(${item})`).join(' AND ');
+    const sqlCondition = [];
+    this._where._condition.forEach(item => {
+      const singleWhere = {};
+      const multiples2sql = [];
 
-      let index = 0;
-
-      for (let fieldName in this._where) {
-        const item = this._where[fieldName];
-        let _logic = 'AND';
-        let whereSql = '';
-
-        fieldName = this._formatFieldsName(fieldName);
-
-        if (typeOf(item) !== 'object') {
-          whereSql = fieldName + ' = \'' + item + '\'';
-        } else if (typeOf(item) === 'object') {
-          if (item._logic) {
-            _logic = item._logic;
-            delete item._logic;
-          }
-
-          let separatorL = '\'',
-            separatorR = '\'';
-          if (item._isSql) {
-            separatorL = '(';
-            separatorR = ')';
-            delete item._isSql;
-          }
-          for (const ti in item) {
-            whereSql = fieldName + ' ' + ti + ' ' + separatorL + item[ti] + separatorR;
-            break;
-          }
+      /* 将多字段名数据单独处理，并将值是字符串的数据转化为数组，便于统一处理 */
+      const keys = Object.keys(item);
+      keys.forEach(key => {
+        let val = item[key];
+        if (typeOf(val) === 'null') {
+          val = [ 'IS', 'NULL'];
+        } else if (key.indexOf('_') !== 0 && typeOf(val) !== 'array' && typeOf(val) !== 'object') {
+          val = [ '=', val ];
         }
-        sql += (index === 0 ? '' : ' ' + _logic + ' ') + whereSql;
-        index++;
-      }
+        /* 将多字段名的数据单独处理 {'title|content': ['like', '%javascript%']} */
+        const _logic = key.indexOf('|') !== -1 ? 'OR' : ( key.indexOf('&') !== -1 ? 'AND' : '');
+        if (_logic) {
+          const multiple = { _logic };
+          const multipleKeys = key.split(_logic === 'OR' ? '|' : '&');
+          multipleKeys.forEach(m => {
+            multiple[m] = val;
+          });
+          const tmp = this._formatWhereItem(multiple);
+          tmp && multiples2sql.push(tmp);
+        } else {
+          singleWhere[key] = val;
+        }
+      });
+      const single2sql = this._formatWhereItem(singleWhere);
+      let sqls = [];
+      single2sql && sqls.push(single2sql);
+      const sql = [...sqls, ...multiples2sql].join(' AND');
+      sql && sqlCondition.push(sql);
+    });
+    let res = [];
+    sqlStr && res.push(sqlStr);
+    res = [...res, ...sqlCondition].join(' AND ');
+    return res ? ` WHERE ${res}` : '';
+  }
+
+  /**
+   * 格式化单个的where条件，每个都是一个完整的对象模式
+   * @private
+   * @param {object} where
+   * @return {string} 处理好的sql 
+   */
+  _formatWhereItem(where) {
+    if (isEmptyObject(where)) return '';
+    const res = [];
+    let _logic = 'AND';
+    if (where._logic) {
+      _logic = where._logic;
+      delete where._logic;
     }
-    return sql;
+    for (let fieldName in where) {
+      let val = where[fieldName];
+      let oprate = '';
+      fieldName = this._formatFieldsName(fieldName);
+      if (typeOf(val) === 'array') {
+        oprate = val[0].trim();
+        val = typeOf( val[1] ) === 'array' ? val[1] : [ val[1] ];
+      }
+      res.push(this._formatWhereItemValue(oprate, fieldName, val));
+    }
+    const sql = res.join(` ${_logic} `);
+    return sql ? `(${sql})` : '';
+  }
+
+  /**
+   * 拼接某个字段的sql语句
+   * @private
+   * @param {string} oprate 操作符 = LIKE 等 
+   * @param {string} fieldName 字段名
+   * @param {array|object} value 字段的值，数组或者对象模式，对象模式下，key是操作符，覆盖 oprate 参数
+   * @return {string} 拼接好的一个字段值的sql语句
+   */
+  _formatWhereItemValue(oprate, fieldName, value) {
+    oprate = oprate.trim().toLocaleUpperCase();
+    const type = typeOf(value);
+    if (type === 'array') {
+      const len = value.length;
+      if (len === 1) {
+        return this._getOprateResultSql(oprate, fieldName, value[0]);
+      } else if (len > 1 &&  ( 
+        ( oprate === 'IN' || oprate === 'NOTIN' || oprate === 'NOT IN' ) || 
+        ( oprate === 'BETWEEN' ) 
+      )) {
+        return this._getOprateResultSql(oprate, fieldName, value);
+      } else {
+        const res = value.map(item => {
+          return this._getOprateResultSql(oprate, fieldName, item);
+        });
+        return res.join(' OR ');
+      }
+    } else if (type === 'object') {
+      const res = [];
+      let _logic = 'AND';
+      if (value._logic) {
+        _logic = value._logic;
+        delete value._logic;
+      }
+      for (const name in value) {
+        const tmp = this._getOprateResultSql(name, fieldName, value[name]);
+        tmp && res.push(tmp);
+      }
+      return res.join(` ${_logic} `);
+    }
+  }
+
+  /**
+   * 主要针对操作符做一些特殊处理，比如IN BETWEEN等
+   * @private
+   * @param {string} oprate 操作符 = LIKE 等 
+   * @param {string} fieldName 字段名
+   * @param {array|string} value 字段的值，数组或者字符串，字符串表示某个值，数组一般表示IN或者BETWEEN的范围
+   * @return {string} 拼接好的sql语句
+   */
+  _getOprateResultSql(oprate, fieldName, value) {
+    const valueType = typeOf(value);
+    if (oprate === 'NOTLIKE') {
+      oprate = 'NOT LIKE';
+    }
+    /* != null 转为 IS NOT NULL */
+    if (oprate === '!=' && value === null) {
+      return `${fieldName} IS NOT NULL`;
+    }
+    if (oprate === 'IN' || oprate === 'NOTIN' || oprate === 'NOT IN') {
+      if (oprate === 'NOTIN') {
+        oprate = 'NOT IN'
+      }
+      if (valueType !== 'array') {
+        value = [ value ];
+      }
+      return `${fieldName} ${oprate} (${value.join(',')})`;
+    }
+    if (oprate === 'BETWEEN') {
+      if (valueType !== 'array' || value.length < 2) return '';
+      return `${fieldName} ${oprate} ${value[0]} AND ${value[1]}`;
+    }
+    value = valueType === 'string' && value !== 'NULL' ? `'${value}'` : value;
+    return `${fieldName} ${oprate} ${value}`;
   }
 
   /**
