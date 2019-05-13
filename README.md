@@ -63,33 +63,6 @@ Mysql数据库实例，封装了常用操作方式
 
 <a name="module_@hyoga/mysql..Mysql"></a>
 
-### @hyoga/mysql~Mysql
-**Kind**: inner class of [<code>@hyoga/mysql</code>](#module_@hyoga/mysql)  
-
-* [~Mysql](#module_@hyoga/mysql..Mysql)
-    * [new Mysql(config)](#new_module_@hyoga/mysql..Mysql_new)
-    * [.query(sql)](#module_@hyoga/mysql..Mysql+query) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.table(tableName)](#module_@hyoga/mysql..Mysql+table) ⇒ <code>Mysql</code>
-    * [.alias(tableAlias)](#module_@hyoga/mysql..Mysql+alias) ⇒ <code>Mysql</code>
-    * [.field(fields)](#module_@hyoga/mysql..Mysql+field) ⇒ <code>Mysql</code>
-    * [.group(collums)](#module_@hyoga/mysql..Mysql+group) ⇒ <code>Mysql</code>
-    * [.where(where)](#module_@hyoga/mysql..Mysql+where) ⇒ <code>Mysql</code>
-    * [.limit(limit)](#module_@hyoga/mysql..Mysql+limit) ⇒ <code>Mysql</code>
-    * [.page(page, pageSize)](#module_@hyoga/mysql..Mysql+page) ⇒ <code>Mysql</code>
-    * [.data(data)](#module_@hyoga/mysql..Mysql+data) ⇒ <code>Mysql</code>
-    * [.order(order)](#module_@hyoga/mysql..Mysql+order) ⇒ <code>Mysql</code>
-    * [.join(join)](#module_@hyoga/mysql..Mysql+join) ⇒ <code>Mysql</code>
-    * [.find(where)](#module_@hyoga/mysql..Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.select(where)](#module_@hyoga/mysql..Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.update(collum, where)](#module_@hyoga/mysql..Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.increase(field, step)](#module_@hyoga/mysql..Mysql+increase) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.decrement(field, step)](#module_@hyoga/mysql..Mysql+decrement) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.add(collum, duplicate)](#module_@hyoga/mysql..Mysql+add) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [.delete(where)](#module_@hyoga/mysql..Mysql+delete) ⇒ <code>Promise.&lt;any&gt;</code>
-    * [._sql()](#module_@hyoga/mysql..Mysql+_sql) ⇒ <code>string</code>
-
-<a name="new_module_@hyoga/mysql..Mysql_new"></a>
-
 #### new Mysql(config)
 创建Mysql实例
 
