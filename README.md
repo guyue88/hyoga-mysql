@@ -1,4 +1,12 @@
 # hyoga-mysql
+[![NPM version][npm-image]][npm-url]
+[![npm download][download-image]][download-url]
+
+[npm-image]: https://img.shields.io/npm/v/@hyoga/mysql.svg?style=flat-square
+[npm-url]: https://www.npmjs.com/package/@hyoga/mysql
+[download-image]: https://img.shields.io/npm/dm/@hyoga/mysql.svg?style=flat-square
+[download-url]: https://www.npmjs.com/package/@hyoga/mysql
+
 一个MYSQL数据库的常用操作封装，使用连续点操作，实现语义化的数据库操作。
 
 ## 安装
