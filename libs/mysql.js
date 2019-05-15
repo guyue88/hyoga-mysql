@@ -23,7 +23,6 @@ class Mysql {
       ...config,
     };
     this.sql = '';
-    this.conn = undefined;
     this._resetParams();
   }
 
@@ -34,15 +33,15 @@ class Mysql {
    */
   query(sql) {
     this._resetParams();
-    this._connect();
+    const connection = this._getConnection();
     return new Promise((resolve, reject) => {
-      this.conn.query(sql, (err, rows) => {
-        this._close();
+      connection.query(sql, (err, rows) => {
+        this._close(connection);
         if (err) {
-          console.error('[bsmysql] MYSQL_EXECUTED_ERROR', err);
+          console.error('[@hyoga/mysql] MYSQL_EXECUTED_ERROR', err);
           reject(err);
         } else {
-          // console.log(`[bsmysql] ${this._sql()}`);
+          // console.log(`[@hyoga/mysql] ${this._sql()}`);
           resolve(rows);
         }
       });
@@ -59,7 +58,7 @@ class Mysql {
       throw new Error('unknow tableName!');
     }
     if (typeOf(tableName) !== 'string') {
-      console.warn('[bsmysql] function table params must be type of "string"');
+      console.warn('[@hyoga/mysql] function table params must be type of "string"');
       return this;
     }
     this._tableName = tableName;
@@ -73,7 +72,7 @@ class Mysql {
    */
   alias(tableAlias) {
     if (typeOf(tableAlias) !== 'string') {
-      console.warn('[bsmysql] function table params must be type of "string"');
+      console.warn('[@hyoga/mysql] function table params must be type of "string"');
       return this;
     }
     this._tableAlias = tableAlias;
@@ -97,7 +96,7 @@ class Mysql {
     } else if (type === 'array') {
       
     } else {
-      console.warn('[bsmysql] function field params must be type of "string" or "array"');
+      console.warn('[@hyoga/mysql] function field params must be type of "string" or "array"');
       fields = [ '*' ];
     }
     const res = [];
@@ -121,7 +120,7 @@ class Mysql {
   group(collums) {
     const type = typeOf(collums);
     if (type !== 'string' && type !== 'array') {
-      console.warn('[bsmysql] function group params must be type of "string" or "array"');
+      console.warn('[@hyoga/mysql] function group params must be type of "string" or "array"');
       return this;
     }
     if (type === 'array') {
@@ -202,7 +201,7 @@ class Mysql {
   where(where) {
     const type = typeOf(where);
     if (type !== 'string' && type !== 'object') {
-      console.warn('[bsmysql] function where params must be type of "object" or "string"');
+      console.warn('[@hyoga/mysql] function where params must be type of "object" or "string"');
       return this;
     }
     if (type === 'object') {
@@ -221,7 +220,7 @@ class Mysql {
   limit(limit) {
     const type = typeOf(limit);
     if (type !== 'number') {
-      console.warn('[bsmysql] function limit params must be type of "number"');
+      console.warn('[@hyoga/mysql] function limit params must be type of "number"');
       limit = parseInt(limit);
       if (isNaN(limit)) {
         return this;
@@ -254,7 +253,7 @@ class Mysql {
    */
   data(data) {
     if (typeOf(data) !== 'object') {
-      console.warn('[bsmysql] function {data} params must be type of "object"');
+      console.warn('[@hyoga/mysql] function {data} params must be type of "object"');
       return this;
     }
     this._data = data;
@@ -276,7 +275,7 @@ class Mysql {
   order(order) {
     const type = typeOf(order);
     if (type !== 'array' && type !== 'string') {
-      console.warn('[bsmysql] function {order} params must be type of "array" or "string"');
+      console.warn('[@hyoga/mysql] function {order} params must be type of "array" or "string"');
       return this;
     }
     if (type === 'array') {
@@ -311,7 +310,7 @@ class Mysql {
   join(join) {
     const type = typeOf(join);
     if (type !== 'object') {
-      console.warn('[bsmysql] function {join} params must be type of "object"');
+      console.warn('[@hyoga/mysql] function {join} params must be type of "object"');
       return this;
     }
     this._join = { ...this._join, ...join };
@@ -475,14 +474,13 @@ class Mysql {
 
     connection.connect(err => {
       if (err) {
-        console.error('[bsmysql] MYSQL_CONNECT_ERROR：', err);
+        console.error('[@hyoga/mysql] MYSQL_CONNECT_ERROR：', err);
       }
     });
     connection.on('error', err => {
-      console.error('[bsmysql] MYSQL_RUNTIME_ERROR：', err);
+      console.error('[@hyoga/mysql] MYSQL_RUNTIME_ERROR：', err);
       if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-        this._connect();
-        console.info('[bsmysql] MYSQL_RECONNECTING...');
+        console.info('[@hyoga/mysql] MYSQL_RECONNECTING...');
       } else {
         throw err;
       }
@@ -491,22 +489,13 @@ class Mysql {
   }
 
   /**
-   * 获取数据库连接对象
-   * @private
-   * @return {void}
-   */
-  _connect() {
-    this.conn = this._getConnection();
-  }
-
-  /**
    * 关闭数据库连接
    * @private
+   * @param {connection} connection mysql连接对象
    * @return {void}
    */
-  _close() {
-    this.conn.end();
-    this.conn = undefined;
+  _close(connection) {
+    connection.end();
   }
 
   /**
