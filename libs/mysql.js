@@ -55,7 +55,7 @@ class Mysql {
    */
   table(tableName) {
     if (!tableName) {
-      throw new Error('unknow tableName!');
+      throw new Error('unknown tableName!');
     }
     if (typeOf(tableName) !== 'string') {
       console.warn('[@hyoga/mysql] function table params must be type of "string"');
@@ -114,19 +114,19 @@ class Mysql {
 
   /**
    * group by 操作
-   * @param {Array|string} collums 分组列名，可为数组或字符串，字符串以逗号分隔
+   * @param {Array|string} columns 分组列名，可为数组或字符串，字符串以逗号分隔
    * @return {Mysql} 实例
    */
-  group(collums) {
-    const type = typeOf(collums);
+  group(columns) {
+    const type = typeOf(columns);
     if (type !== 'string' && type !== 'array') {
       console.warn('[@hyoga/mysql] function group params must be type of "string" or "array"');
       return this;
     }
     if (type === 'array') {
-      collums = collums.join(', ');
+      columns = columns.join(', ');
     }
-    this._group = collums;
+    this._group = columns;
     return this;
   }
 
@@ -264,11 +264,11 @@ class Mysql {
    * 排序
    * @param {array|string} order 排序
    * @example
-   * // SELECT `article_catgorys`.`*` FROM `article_catgorys` ORDER BY id desc
-   * mysql.table('article_catgorys').order('id desc').select();
+   * // SELECT `article_categorys`.`*` FROM `article_categorys` ORDER BY id desc
+   * mysql.table('article_categorys').order('id desc').select();
    * 
-   * //SELECT `article_catgorys`.`*` FROM `article_catgorys` ORDER BY id desc, name asc
-   * mysql.table('article_catgorys').order([ 'id desc', 'name asc' ]).select();
+   * //SELECT `article_categorys`.`*` FROM `article_categorys` ORDER BY id desc, name asc
+   * mysql.table('article_categorys').order([ 'id desc', 'name asc' ]).select();
    * 
    * @return {Mysql} 实例
    */
@@ -289,19 +289,19 @@ class Mysql {
    * 设置join条件，可以多次join
    * @param {object} join join条件
    * @example
-   * // SELECT `a`.`*`, `b`.`*` FROM `article_posts` as a LEFT JOIN `article_catgorys` AS b ON (a.`catgory_id`=b.`id`) limit 1
+   * // SELECT `a`.`*`, `b`.`*` FROM `article_posts` as a LEFT JOIN `article_categorys` AS b ON (a.`category_id`=b.`id`) limit 1
    * mysql.table('article_posts').alias('a').field([ 'a.*', 'b.*' ]).join({
-   *  article_catgorys: {
+   *  article_categorys: {
    *    as: 'b',
-   *    on: { catgory_id: 'id' }
+   *    on: { category_id: 'id' }
    *  }
    * }).find();
    *
-   * // SELECT `a`.`*`, `article_catgorys`.`*` FROM `article_posts` as a LEFT JOIN `article_catgorys` ON (a.`catgory_id`=article_catgorys.`id`) limit 1
-   * mysql.table('article_posts').alias('a').field([ 'a.*', 'article_catgorys.*' ]).join({
-   *  article_catgorys: {
+   * // SELECT `a`.`*`, `article_categorys`.`*` FROM `article_posts` as a LEFT JOIN `article_categorys` ON (a.`category_id`=article_categorys.`id`) limit 1
+   * mysql.table('article_posts').alias('a').field([ 'a.*', 'article_categorys.*' ]).join({
+   *  article_categorys: {
    *    // as: 'b',
-   *    on: { catgory_id: 'id' }
+   *    on: { category_id: 'id' }
    *  }
    * }).find();
    * 
@@ -336,7 +336,7 @@ class Mysql {
    */
   select(where = null) {
     if (!this._tableName) {
-      throw new Error('unknow table name!');
+      throw new Error('unknown table name!');
     }
 
     where && this.where(where);
@@ -361,13 +361,13 @@ class Mysql {
 
   /**
    * 更新操作
-   * @param {object} collum {name: value} 更新的字段与值
+   * @param {object} column {name: value} 更新的字段与值
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  update(collum, where = null) {
+  update(column, where = null) {
     if (!this._tableName) {
-      throw new Error('unknow table name!');
+      throw new Error('unknown table name!');
     }
     where && this.where(where);
     let sql = 'UPDATE ';
@@ -375,13 +375,13 @@ class Mysql {
     sql += this._tableAlias ? ` as ${this._tableAlias} SET ` : ' SET ';
 
     const tmpArr = [];
-    for (const i in collum) {
+    for (const i in column) {
       let tmp = '';
-      const match = collum[i].match(/^(\+|\-)([^+-]+)$/);
+      const match = column[i].match(/^(\+|\-)([^+-]+)$/);
       if (match) {
         tmp = this._formatFieldsName(i) + ' = ' + this._formatFieldsName(i) + match[1] + match[2];
       } else {
-        tmp = this._formatFieldsName(i) + ' = \'' + collum[i] + '\'';
+        tmp = this._formatFieldsName(i) + ' = \'' + column[i] + '\'';
       }
       tmpArr.push(tmp);
     }
@@ -417,20 +417,20 @@ class Mysql {
 
   /**
    * 新增数据
-   * @param {object} collum 字段键值对
+   * @param {object} column 字段键值对
    * @param {object} duplicate 出现重复则更新，{key : 'c', value : VALUES('123')}
    * @return {Promise<any>} 操作结果
    */
-  add(collum, duplicate = false) {
+  add(column, duplicate = false) {
     if (!this._tableName) {
-      throw new Error('unknow table name!');
+      throw new Error('unknown table name!');
     }
     let sql = 'INSERT INTO ' + this._tableName;
     const keyArr = [];
     const valueArr = [];
-    for (const i in collum) {
+    for (const i in column) {
       keyArr.push('`' + i + '`');
-      valueArr.push('\'' + collum[i] + '\'');
+      valueArr.push('\'' + column[i] + '\'');
     }
     sql += ' (' + keyArr.join(',') + ')';
     sql += ' VALUES (' + valueArr.join(',') + ')';
@@ -455,7 +455,7 @@ class Mysql {
    */
   delete(where) {
     if (!this._tableName) {
-      throw new Error('unknow table name!');
+      throw new Error('unknown table name!');
     }
     where && this.where(where);
     let sql = 'DELETE FROM ' + this._tableName;
@@ -566,9 +566,9 @@ class Mysql {
     if (match) {
       const funcName = match[1];
       const name = match[2];
-      res = funcName + '(`' + table + '`.`' + name + '`)';
+      res = funcName + '(`' + table + '`.' + (name === '*' ? name : '`' + name + '`') + ')';
     } else {
-      res = '`' + table + '`.`' + fieldName + '`';
+      res = '`' + table + '`.' + (fieldName === '*' ? fieldName : '`' + fieldName + '`');
     }
     return res;
   }
@@ -671,13 +671,13 @@ class Mysql {
     }
     for (let fieldName in where) {
       let val = where[fieldName];
-      let oprate = '';
+      let operate = '';
       fieldName = this._formatFieldsName(fieldName);
       if (typeOf(val) === 'array') {
-        oprate = val[0].trim();
+        operate = val[0].trim();
         val = typeOf( val[1] ) === 'array' ? val[1] : [ val[1] ];
       }
-      res.push(this._formatWhereItemValue(oprate, fieldName, val));
+      res.push(this._formatWhereItemValue(operate, fieldName, val));
     }
     const sql = res.join(` ${_logic} `);
     return sql ? `(${sql})` : '';
@@ -686,26 +686,26 @@ class Mysql {
   /**
    * 拼接某个字段的sql语句
    * @private
-   * @param {string} oprate 操作符 = LIKE 等 
+   * @param {string} operate 操作符 = LIKE 等 
    * @param {string} fieldName 字段名
-   * @param {array|object} value 字段的值，数组或者对象模式，对象模式下，key是操作符，覆盖 oprate 参数
+   * @param {array|object} value 字段的值，数组或者对象模式，对象模式下，key是操作符，覆盖 operate 参数
    * @return {string} 拼接好的一个字段值的sql语句
    */
-  _formatWhereItemValue(oprate, fieldName, value) {
-    oprate = oprate.trim().toLocaleUpperCase();
+  _formatWhereItemValue(operate, fieldName, value) {
+    operate = operate.trim().toLocaleUpperCase();
     const type = typeOf(value);
     if (type === 'array') {
       const len = value.length;
       if (len === 1) {
-        return this._getOprateResultSql(oprate, fieldName, value[0]);
+        return this._getOperateResultSql(operate, fieldName, value[0]);
       } else if (len > 1 &&  ( 
-        ( oprate === 'IN' || oprate === 'NOTIN' || oprate === 'NOT IN' ) || 
-        ( oprate === 'BETWEEN' ) 
+        ( operate === 'IN' || operate === 'NOTIN' || operate === 'NOT IN' ) || 
+        ( operate === 'BETWEEN' ) 
       )) {
-        return this._getOprateResultSql(oprate, fieldName, value);
+        return this._getOperateResultSql(operate, fieldName, value);
       } else {
         const res = value.map(item => {
-          return this._getOprateResultSql(oprate, fieldName, item);
+          return this._getOperateResultSql(operate, fieldName, item);
         });
         return res.join(' OR ');
       }
@@ -717,7 +717,7 @@ class Mysql {
         delete value._logic;
       }
       for (const name in value) {
-        const tmp = this._getOprateResultSql(name, fieldName, value[name]);
+        const tmp = this._getOperateResultSql(name, fieldName, value[name]);
         tmp && res.push(tmp);
       }
       return res.join(` ${_logic} `);
@@ -727,35 +727,35 @@ class Mysql {
   /**
    * 主要针对操作符做一些特殊处理，比如IN BETWEEN等
    * @private
-   * @param {string} oprate 操作符 = LIKE 等 
+   * @param {string} operate 操作符 = LIKE 等 
    * @param {string} fieldName 字段名
    * @param {array|string} value 字段的值，数组或者字符串，字符串表示某个值，数组一般表示IN或者BETWEEN的范围
    * @return {string} 拼接好的sql语句
    */
-  _getOprateResultSql(oprate, fieldName, value) {
+  _getOperateResultSql(operate, fieldName, value) {
     const valueType = typeOf(value);
-    if (oprate === 'NOTLIKE') {
-      oprate = 'NOT LIKE';
+    if (operate === 'NOTLIKE') {
+      operate = 'NOT LIKE';
     }
     /* != null 转为 IS NOT NULL */
-    if (oprate === '!=' && value === null) {
+    if (operate === '!=' && value === null) {
       return `${fieldName} IS NOT NULL`;
     }
-    if (oprate === 'IN' || oprate === 'NOTIN' || oprate === 'NOT IN') {
-      if (oprate === 'NOTIN') {
-        oprate = 'NOT IN'
+    if (operate === 'IN' || operate === 'NOTIN' || operate === 'NOT IN') {
+      if (operate === 'NOTIN') {
+        operate = 'NOT IN'
       }
       if (valueType !== 'array') {
         value = [ value ];
       }
-      return `${fieldName} ${oprate} (${value.join(',')})`;
+      return `${fieldName} ${operate} (${value.join(',')})`;
     }
-    if (oprate === 'BETWEEN') {
+    if (operate === 'BETWEEN') {
       if (valueType !== 'array' || value.length < 2) return '';
-      return `${fieldName} ${oprate} ${value[0]} AND ${value[1]}`;
+      return `${fieldName} ${operate} ${value[0]} AND ${value[1]}`;
     }
     value = valueType === 'string' && value !== 'NULL' ? `'${value}'` : value;
-    return `${fieldName} ${oprate} ${value}`;
+    return `${fieldName} ${operate} ${value}`;
   }
 
   /**

@@ -22,7 +22,7 @@ describe('find row', function() {
     // expect(mysql.find.bind(mysql)).to.throw(Error);
   });
 
-  it ('when {where} not set should return all collums', async function() {
+  it ('when {where} not set should return all columns', async function() {
     const data = await mysql.table('admins').find();
     expect(data).to.include.keys('id');
   });
@@ -129,7 +129,7 @@ describe('where', function() {
 });
 
 describe('field', function() {
-  it ('when {field} was set should only return correct collums', async function() {
+  it ('when {field} was set should only return correct columns', async function() {
     const data1 = await mysql.table('admins').field('id, name').find();
     expect(data1).to.have.any.keys('id', 'name');
     const data2 = await mysql.table('admins').field(['id', 'name as a', { status: 'b' }]).find();
@@ -139,14 +139,14 @@ describe('field', function() {
 
 describe('limit', function() {
   it ('when {limit} was set should only return ${limit} items', async function() {
-    const data = await mysql.table('article_catgorys').limit(2).select();
+    const data = await mysql.table('article_categorys').limit(2).select();
     expect(data).to.have.lengthOf(2);
   });
 });
 
 describe('page', function () {
-  it('when {page} was set should only return ${offser}, ${limit} items', async function () {
-    const data = await mysql.table('article_catgorys').page(2, 2).select();
+  it('when {page} was set should only return ${offset}, ${limit} items', async function () {
+    const data = await mysql.table('article_categorys').page(2, 2).select();
     expect(data).to.have.lengthOf(2);
     expect(data[0]).to.have.any.keys({ id: 3 });
   });
@@ -154,9 +154,9 @@ describe('page', function () {
 
 describe('order', function () {
   it('when {order} was set should only return correct order items', async function () {
-    const data1 = await mysql.table('article_catgorys').order('id desc').select();
+    const data1 = await mysql.table('article_categorys').order('id desc').select();
     expect(data1[0].id).to.be.above(data1[1].id);
-    const data2 = await mysql.table('article_catgorys').order([ 'id desc', 'name asc' ]).select();
+    const data2 = await mysql.table('article_categorys').order([ 'id desc', 'name asc' ]).select();
     expect(data2[0].id).to.be.above(data2[1].id);
   });
 });
@@ -167,20 +167,20 @@ describe('join', function () {
       .alias('a')
       .field([ 'a.*', 'b.*' ])
       .join({
-        article_catgorys: {
+        article_categorys: {
           as: 'b',
-          on: { catgory_id: 'id' }
+          on: { category_id: 'id' }
         }
       })
       .find();
     expect(data1).to.include.keys('name');
     const data2 = await mysql.table('article_posts')
       .alias('a')
-      .field([ 'a.*', 'article_catgorys.*' ])
+      .field([ 'a.*', 'article_categorys.*' ])
       .join({
-        article_catgorys: {
+        article_categorys: {
           // as: 'b',
-          on: { catgory_id: 'id' }
+          on: { category_id: 'id' }
         }
       })
       .find();
@@ -189,43 +189,43 @@ describe('join', function () {
 });
 
 describe('add', function () {
-  it('when {add} oprate should add the correct rows', async function () {
+  it('when {add} operate should add the correct rows', async function () {
     let insertId = 0;
     after(async function () {
-      await mysql.table('article_catgorys').delete({ id: insertId });
+      await mysql.table('article_categorys').delete({ id: insertId });
     });
-    const data1 = await mysql.table('article_catgorys').add({ name: '测试add' });
+    const data1 = await mysql.table('article_categorys').add({ name: '测试add' });
     expect(data1).to.have.any.keys({ affectedRows: 1 });
     insertId = data1.insertId;
   });
 });
 
 describe('delete', function () {
-  it('when {delete} oprate should delete the correct rows', async function () {
+  it('when {delete} operate should delete the correct rows', async function () {
     let insertId = 0;
     before(async function () {
-      const data1 = await mysql.table('article_catgorys').add({ name: '测试delete' });
+      const data1 = await mysql.table('article_categorys').add({ name: '测试delete' });
       insertId = data1.insertId;
     });
-    await mysql.table('article_catgorys').delete({ id: insertId });
-    const data1 = await mysql.table('article_catgorys').find({ id: insertId });
+    await mysql.table('article_categorys').delete({ id: insertId });
+    const data1 = await mysql.table('article_categorys').find({ id: insertId });
     expect(data1).to.be.undefined;
   });
 });
 
 describe('update', function () {
-  it('when {update} oprate should update the correct rows', async function () {
+  it('when {update} operate should update the correct rows', async function () {
     after(async function () {
-      await mysql.table('article_catgorys').update({ name: '测试数据' }, { id: 4 });
-      await mysql.table('article_catgorys').update({ name: '测试数据' }, { id: 5 });
+      await mysql.table('article_categorys').update({ name: '测试数据' }, { id: 4 });
+      await mysql.table('article_categorys').update({ name: '测试数据' }, { id: 5 });
     });
-    const data1 = await mysql.table('article_catgorys').update({ name: '测试update' }, { id: 4 });
+    const data1 = await mysql.table('article_categorys').update({ name: '测试update' }, { id: 4 });
     expect(data1).to.have.any.keys({ affectedRows: 1 });
-    const data2 = await mysql.table('article_catgorys').where({ id: 4 }).find();
+    const data2 = await mysql.table('article_categorys').where({ id: 4 }).find();
     expect(data2).to.have.any.keys({ name: '测试update' });
-    const data3 = await mysql.table('article_catgorys').where({ id: 5 }).update({ name: '测试update' });
+    const data3 = await mysql.table('article_categorys').where({ id: 5 }).update({ name: '测试update' });
     expect(data3).to.have.any.keys({ affectedRows: 1 });
-    const data4 = await mysql.table('article_catgorys').where({ id: 5 }).find();
+    const data4 = await mysql.table('article_categorys').where({ id: 5 }).find();
     expect(data4).to.have.any.keys({ name: '测试update' });
   });
 });
