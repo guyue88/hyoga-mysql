@@ -377,7 +377,8 @@ class Mysql {
     const tmpArr = [];
     for (const i in column) {
       let tmp = '';
-      const match = column[i].match(/^(\+|\-)([^+-]+)$/);
+      // 检测数据中是否含有加减号
+      const match = (column[i] + '').match(/^(\+|\-)([^+-]+)$/);
       if (match) {
         tmp = this._formatFieldsName(i) + ' = ' + this._formatFieldsName(i) + match[1] + match[2];
       } else {
@@ -434,6 +435,49 @@ class Mysql {
     }
     sql += ' (' + keyArr.join(',') + ')';
     sql += ' VALUES (' + valueArr.join(',') + ')';
+
+    if (duplicate) {
+      sql += ' ON DUPLICATE KEY UPDATE ';
+      // 引用字段
+      if (/VALUES\(/ig.test(duplicate.value)) {
+        sql += '`' + duplicate.key + '`=' + duplicate.value;
+      } else {
+        sql += '`' + duplicate.key + '`=\'' + duplicate.value + '\'';
+      }
+    }
+    this.sql = sql;
+    return this.query(sql);
+  }
+
+  /**
+   * 批量新增数据
+   * @param {object} columnList 字段键值对数组
+   * @param {object} duplicate 出现重复则更新，{key : 'c', value : VALUES('123')}
+   * @return {Promise<any>} 操作结果
+   */
+  addMany(columnList, duplicate = false) {
+    if (!this._tableName) {
+      throw new Error('unknown table name!');
+    }
+    let sql = 'INSERT INTO ' + this._tableName;
+    const keyArr = [];
+    const valueArr = [];
+    let keyOk = false;
+    columnList.forEach(column => {
+      const arr = [];
+      for (const i in column) {
+        !keyOk && keyArr.push('`' + i + '`');
+        arr.push(`'${column[i]}'`);
+      }
+      valueArr.push(arr);
+      keyOk = true;
+    });
+    const values = valueArr.map(item => {
+      return `(${valueArr.join(',')})`;
+    });
+    
+    sql += ` (${keyArr.join(',')})`;' (' + keyArr.join(',') + ')';
+    sql += ` VALUES ${values.join(',')}`;
 
     if (duplicate) {
       sql += ' ON DUPLICATE KEY UPDATE ';
