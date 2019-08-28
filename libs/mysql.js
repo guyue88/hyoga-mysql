@@ -399,6 +399,9 @@ class Mysql {
    * @return {Promise<any>} 更新结果
    */
   updateMany(columnList) {
+    if (!columnList || !columnList.length) {
+      throw new Error('unknown data list!');
+    }
     const duplicate = {};
     for (let key in columnList[0]) {
       duplicate[key] = `VALUES(${key})`;
@@ -475,6 +478,9 @@ class Mysql {
    * @return {Promise<any>} 操作结果
    */
   addMany(columnList, duplicate = false) {
+    if (!columnList || !columnList.length) {
+      throw new Error('unknown data list!');
+    }
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
