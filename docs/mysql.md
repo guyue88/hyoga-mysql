@@ -22,6 +22,7 @@ Mysql数据库实例，封装了常用操作方式
         * [.find(where)](#module_@hyoga/mysql..Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
         * [.select(where)](#module_@hyoga/mysql..Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
         * [.update(column, where)](#module_@hyoga/mysql..Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
+        * [.updateMany(columnList, where)](#module_@hyoga/mysql..Mysql+updateMany) ⇒ <code>Promise.&lt;any&gt;</code>
         * [.increase(field, step)](#module_@hyoga/mysql..Mysql+increase) ⇒ <code>Promise.&lt;any&gt;</code>
         * [.decrement(field, step)](#module_@hyoga/mysql..Mysql+decrement) ⇒ <code>Promise.&lt;any&gt;</code>
         * [.add(column, duplicate)](#module_@hyoga/mysql..Mysql+add) ⇒ <code>Promise.&lt;any&gt;</code>
@@ -50,6 +51,7 @@ Mysql数据库实例，封装了常用操作方式
     * [.find(where)](#module_@hyoga/mysql..Mysql+find) ⇒ <code>Promise.&lt;any&gt;</code>
     * [.select(where)](#module_@hyoga/mysql..Mysql+select) ⇒ <code>Promise.&lt;any&gt;</code>
     * [.update(column, where)](#module_@hyoga/mysql..Mysql+update) ⇒ <code>Promise.&lt;any&gt;</code>
+    * [.updateMany(columnList, where)](#module_@hyoga/mysql..Mysql+updateMany) ⇒ <code>Promise.&lt;any&gt;</code>
     * [.increase(field, step)](#module_@hyoga/mysql..Mysql+increase) ⇒ <code>Promise.&lt;any&gt;</code>
     * [.decrement(field, step)](#module_@hyoga/mysql..Mysql+decrement) ⇒ <code>Promise.&lt;any&gt;</code>
     * [.add(column, duplicate)](#module_@hyoga/mysql..Mysql+add) ⇒ <code>Promise.&lt;any&gt;</code>
@@ -334,6 +336,19 @@ mysql.table('article_posts').alias('a').field([ 'a.*', 'article_categorys.*' ]).
 | column | <code>object</code> |  | {name: value} 更新的字段与值 |
 | where | <code>object</code> \| <code>string</code> | <code></code> | where条件，参见[where]方法 |
 
+<a name="module_@hyoga/mysql..Mysql+updateMany"></a>
+
+#### mysql.updateMany(columnList, where) ⇒ <code>Promise.&lt;any&gt;</code>
+一次性更新多条数据
+
+**Kind**: instance method of [<code>Mysql</code>](#module_@hyoga/mysql..Mysql)  
+**Returns**: <code>Promise.&lt;any&gt;</code> - 更新结果  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| columnList | <code>Array.&lt;object&gt;</code> | [{id: 1, name: value}] 更新的字段与值，必须包含主键 |
+| where | <code>object</code> \| <code>string</code> | where条件，参见[where]方法 |
+
 <a name="module_@hyoga/mysql..Mysql+increase"></a>
 
 #### mysql.increase(field, step) ⇒ <code>Promise.&lt;any&gt;</code>
@@ -371,7 +386,7 @@ mysql.table('article_posts').alias('a').field([ 'a.*', 'article_categorys.*' ]).
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | column | <code>object</code> |  | 字段键值对 |
-| duplicate | <code>object</code> | <code>false</code> | 出现重复则更新，{key : 'c', value : VALUES('123')} |
+| duplicate | <code>object</code> | <code>false</code> | 出现重复则更新，{id : 100, name : VALUES('test')} |
 
 <a name="module_@hyoga/mysql..Mysql+addMany"></a>
 
@@ -384,7 +399,7 @@ mysql.table('article_posts').alias('a').field([ 'a.*', 'article_categorys.*' ]).
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | columnList | <code>object</code> |  | 字段键值对数组 |
-| duplicate | <code>object</code> | <code>false</code> | 出现重复则更新，{key : 'c', value : VALUES('123')} |
+| duplicate | <code>object</code> | <code>false</code> | 出现重复则更新，{id : 100, name : VALUES('test')} |
 
 <a name="module_@hyoga/mysql..Mysql+delete"></a>
 

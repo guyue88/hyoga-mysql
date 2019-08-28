@@ -229,3 +229,19 @@ describe('update', function () {
     expect(data4).to.have.any.keys({ name: '测试update' });
   });
 });
+
+describe('updateMany', function () {
+  it('when {updateMany} operate should update the correct rows', async function () {
+    after(async function () {
+      await mysql.table('article_categorys').update({ name: '测试数据' }, { id: 4 });
+    });
+    const data1 = await mysql.table('article_categorys').update({ name: '测试update' }, { id: 4 });
+    expect(data1).to.have.any.keys({ affectedRows: 1 });
+    const data2 = await mysql.table('article_categorys').where({ id: 4 }).find();
+    expect(data2).to.have.any.keys({ name: '测试update' });
+    const data3 = await mysql.table('article_categorys').where({ id: 5 }).update({ name: '测试update' });
+    expect(data3).to.have.any.keys({ affectedRows: 1 });
+    const data4 = await mysql.table('article_categorys').where({ id: 5 }).find();
+    expect(data4).to.have.any.keys({ name: '测试update' });
+  });
+});

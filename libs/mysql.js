@@ -393,6 +393,20 @@ class Mysql {
   }
 
   /**
+   * 一次性更新多条数据
+   * @param {object[]} columnList [{id: 1, name: value}] 更新的字段与值，必须包含主键
+   * @param {object|string} where where条件，参见[where]方法
+   * @return {Promise<any>} 更新结果
+   */
+  updateMany(columnList) {
+    const duplicate = {};
+    for (let key in columnList[0]) {
+      duplicate[key] = `VALUES(${key})`;
+    }
+    return this.addMany(columnList, duplicate);
+  }
+
+  /**
    * 自增操作
    * @param {string} field 字段名
    * @param {number} step 自增数，默认1
@@ -419,7 +433,7 @@ class Mysql {
   /**
    * 新增数据
    * @param {object} column 字段键值对
-   * @param {object} duplicate 出现重复则更新，{key : 'c', value : VALUES('123')}
+   * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
   add(column, duplicate = false) {
@@ -439,11 +453,16 @@ class Mysql {
     if (duplicate) {
       sql += ' ON DUPLICATE KEY UPDATE ';
       // 引用字段
-      if (/VALUES\(/ig.test(duplicate.value)) {
-        sql += '`' + duplicate.key + '`=' + duplicate.value;
-      } else {
-        sql += '`' + duplicate.key + '`=\'' + duplicate.value + '\'';
+      const tmpArr = [];
+      for (let key in duplicate) {
+        const value = duplicate[key];
+        if (/VALUES\(/ig.test(value)) {
+          tmpArr.push('`' + key + '`=' + value);
+        } else {
+          tmpArr.push('`' + key + '`=\'' + value + '\'');
+        }
       }
+      sql += tmpArr.join(',');
     }
     this.sql = sql;
     return this.query(sql);
@@ -452,7 +471,7 @@ class Mysql {
   /**
    * 批量新增数据
    * @param {object} columnList 字段键值对数组
-   * @param {object} duplicate 出现重复则更新，{key : 'c', value : VALUES('123')}
+   * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
   addMany(columnList, duplicate = false) {
@@ -473,7 +492,7 @@ class Mysql {
       keyOk = true;
     });
     const values = valueArr.map(item => {
-      return `(${valueArr.join(',')})`;
+      return `(${item.join(',')})`;
     });
     
     sql += ` (${keyArr.join(',')})`;' (' + keyArr.join(',') + ')';
@@ -482,11 +501,16 @@ class Mysql {
     if (duplicate) {
       sql += ' ON DUPLICATE KEY UPDATE ';
       // 引用字段
-      if (/VALUES\(/ig.test(duplicate.value)) {
-        sql += '`' + duplicate.key + '`=' + duplicate.value;
-      } else {
-        sql += '`' + duplicate.key + '`=\'' + duplicate.value + '\'';
+      const tmpArr = [];
+      for (let key in duplicate) {
+        const value = duplicate[key];
+        if (/VALUES\(/ig.test(value)) {
+          tmpArr.push('`' + key + '`=' + value);
+        } else {
+          tmpArr.push('`' + key + '`=\'' + value + '\'');
+        }
       }
+      sql += tmpArr.join(',');
     }
     this.sql = sql;
     return this.query(sql);
