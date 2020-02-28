@@ -4,7 +4,7 @@ interface Config {
   user: string;
   password: string;
   database: string;
-};
+}
 
 /**
  * Mysql数据库实例，封装了常用操作方式
@@ -16,7 +16,7 @@ declare class Mysql {
    * 创建Mysql实例
    * @param {Config} config 数据库连接配置
    */
-  constructor(config: Config): Mysql;
+  constructor(config: Config);
 
   /**
    * 直接执行sql语句
@@ -37,7 +37,7 @@ declare class Mysql {
    * @param {string} tableAlias 主表别名
    * @return {Mysql} 实例
    */
-  alias(tableAlias: string): Mysql
+  alias(tableAlias: string): Mysql;
 
   /**
    * 设置需要选取的字段，字符串或数组格式
@@ -126,7 +126,7 @@ declare class Mysql {
    * 
    * @return {Mysql} 实例
    */
-  where(where: string | {[string]: any}): Mysql;
+  where(where: string | {[index: string]: any}): Mysql;
 
   /**
    * 设置结果的条数限制
@@ -193,14 +193,14 @@ declare class Mysql {
    * @param {object|string} where where条件，直接的sql语句或者k-v条件
    * @return {Promise<any>} 查询结果
    */
-  async find(where: string | {[string]: any}):Promise<any>;
+  find(where: string | {[index: string]: any}):Promise<any>;
 
   /**
    * 查找数据
    * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  select(where: string | {[string]: any}):Promise<any>;
+  select(where: string | {[index: string]: any}):Promise<any>;
 
   /**
    * 更新操作
@@ -208,7 +208,7 @@ declare class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  update(column: {[string]: any}, where: string | {[string]: any}): Promise<any>;
+  update(column: {[index: string]: any}, where: string | {[index: string]: any}): Promise<any>;
 
   /**
    * 一次性更新多条数据
@@ -216,7 +216,7 @@ declare class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  updateMany(columnList: {[string]: any}[]): Promise<any>;
+  updateMany(columnList: {[index: string]: any}[]): Promise<any>;
 
   /**
    * 自增操作
@@ -240,7 +240,7 @@ declare class Mysql {
    * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
-  add(column: {[string]: any}, duplicate: boolean | {[string]: any}): Promise<any>;
+  add(column: {[index: string]: any}, duplicate: boolean | {[index: string]: any}): Promise<any>;
 
   /**
    * 批量新增数据
@@ -248,14 +248,14 @@ declare class Mysql {
    * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
-  addMany(columnList: {[string]: any}[], duplicate: boolean | {[string]: any}): Promise<any>;
+  addMany(columnList: {[index: string]: any}[], duplicate: boolean | {[index: string]: any}): Promise<any>;
 
   /**
    * 删除操作，彻底删除一条数据，一般不建议删除数据，可以通过字段开关控制
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 操作结果
    */
-  delete(where: {[string]: any}): Promise<any>;
+  delete(where: {[index: string]: any}): Promise<any>;
 }
 
-export default Lut;
+export default Mysql;
