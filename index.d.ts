@@ -1,6 +1,6 @@
 interface Config {
   host: string;
-  port: number;
+  port?: number;
   user: string;
   password: string;
   database: string;
@@ -193,14 +193,14 @@ declare class Mysql {
    * @param {object|string} where where条件，直接的sql语句或者k-v条件
    * @return {Promise<any>} 查询结果
    */
-  find(where: string | {[index: string]: any}):Promise<any>;
+  find(where?: string | {[index: string]: any}):Promise<any>;
 
   /**
    * 查找数据
    * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  select(where: string | {[index: string]: any}):Promise<any>;
+  select(where?: string | {[index: string]: any}):Promise<any>;
 
   /**
    * 更新操作
@@ -208,7 +208,7 @@ declare class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  update(column: {[index: string]: any}, where: string | {[index: string]: any}): Promise<any>;
+  update(column: {[index: string]: any}, where?: string | {[index: string]: any}): Promise<any>;
 
   /**
    * 一次性更新多条数据
@@ -240,7 +240,7 @@ declare class Mysql {
    * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
-  add(column: {[index: string]: any}, duplicate: boolean | {[index: string]: any}): Promise<any>;
+  add(column: {[index: string]: any}, duplicate?: boolean | {[index: string]: any}): Promise<any>;
 
   /**
    * 批量新增数据
@@ -248,14 +248,14 @@ declare class Mysql {
    * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
-  addMany(columnList: {[index: string]: any}[], duplicate: boolean | {[index: string]: any}): Promise<any>;
+  addMany(columnList: {[index: string]: any}[], duplicate?: boolean | {[index: string]: any}): Promise<any>;
 
   /**
    * 删除操作，彻底删除一条数据，一般不建议删除数据，可以通过字段开关控制
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 操作结果
    */
-  delete(where: {[index: string]: any}): Promise<any>;
+  delete(where?: {[index: string]: any}): Promise<any>;
 }
 
 export default Mysql;
