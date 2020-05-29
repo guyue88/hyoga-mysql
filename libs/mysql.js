@@ -436,7 +436,7 @@ class Mysql {
   /**
    * 新增数据
    * @param {object} column 字段键值对
-   * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
+   * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}，使用时 column 字段需要包含主键，参考sql ON DUPLICATE KEY UPDATE 用法
    * @return {Promise<any>} 操作结果
    */
   add(column, duplicate = false) {
