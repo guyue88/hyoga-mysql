@@ -1,23 +1,38 @@
-'use strict';
+import { PoolConfig, createPool, PoolConnection, Pool } from 'mysql';
+import debug from 'debug';
+import { typeOf, isEmptyObject } from './utils';
 
-const { createConnection } = require('mysql');
-const { typeOf, isEmptyObject } = require('../utils/util');
+const log = debug('Hyoga');
 
 /**
  * Mysql数据库实例，封装了常用操作方式
  * @module @hyoga/mysql
  * @author <lq9328@126.com>
  */
-class Mysql {
-   connection = null
+export default class Mysql {
+  private pool: Pool;
+  private config: PoolConfig;
+  private sql: string;
+  private _tableName: string;
+  private _tableAlias: string;
+  private _fields: (string | Record<string, any>)[];
+  private _group: string;
+  private _where: { _condition: Object[]; _sql: string[] };
+  private _limit: number | string;
+  private _data: Record<string, any>;
+  private _order: string;
+  private _join: Record<string, any>;
+
   /**
    * 创建Mysql实例
    * @param {object} config 数据库连接配置
    */
-  constructor(config) {
+  constructor(config: PoolConfig) {
     this.config = {
-      host: '',
       port: 3306,
+      multipleStatements: true,
+      connectionLimit: 100,
+      host: '',
       user: '',
       password: '',
       database: '',
@@ -25,7 +40,6 @@ class Mysql {
     };
     this.sql = '';
     this._resetParams();
-    this.connection = this._getConnection();
   }
 
   /**
@@ -33,10 +47,8 @@ class Mysql {
    * @param {string} sql sql语句
    * @return {Promise<any>} sql执行结果
    */
-  query(sql) {
-    if ( !this.connection ) {
-      throw new Error( 'not connection' );
-    }
+  async query(sql: string): Promise<any> {
+    const connection = await this._getConnection();
     this._resetParams();
     return new Promise((resolve, reject) => {
       connection.query(sql, (err, rows) => {
@@ -44,9 +56,10 @@ class Mysql {
           console.error('[@hyoga/mysql] MYSQL_EXECUTED_ERROR', err);
           reject(err);
         } else {
-          // console.log(`[@hyoga/mysql] ${this._sql()}`);
+          log(`[@hyoga/mysql] ${this._sql()}`);
           resolve(rows);
         }
+        connection.release();
       });
     });
   }
@@ -56,7 +69,7 @@ class Mysql {
    * @param {string} tableName 表名
    * @return {Mysql} 实例
    */
-  table(tableName) {
+  table(tableName: string): Mysql {
     if (!tableName) {
       throw new Error('unknown tableName!');
     }
@@ -73,7 +86,7 @@ class Mysql {
    * @param {string} tableAlias 主表别名
    * @return {Mysql} 实例
    */
-  alias(tableAlias) {
+  alias(tableAlias: string): Mysql {
     if (typeOf(tableAlias) !== 'string') {
       console.warn('[@hyoga/mysql] function table params must be type of "string"');
       return this;
@@ -85,29 +98,28 @@ class Mysql {
   /**
    * 设置需要选取的字段，字符串或数组格式
    * @param {string|Array} fields 需要选取的字段
-   * @example 
+   * @example
    * // SELECT `admins`.`id`, `admins`.`name` FROM `admins` limit 1
    * mysql.table('admins').field('id, name').find();
    * // SELECT `admins`.`id`, `admins`.`name` as a, `admins`.`status` as b FROM `admins` limit 1
    * mysql.table('admins').field(['id', 'name as a', { status: 'b' }]).find();
    * @return {Mysql} 实例
    */
-  field(fields) {
+  field(fields: string | Array<string | Record<string, string>>): Mysql {
     const type = typeOf(fields);
     if (type === 'string') {
-      fields = fields.split(',');
+      fields = (fields as string).split(',');
     } else if (type === 'array') {
-      
     } else {
       console.warn('[@hyoga/mysql] function field params must be type of "string" or "array"');
-      fields = [ '*' ];
+      fields = ['*'];
     }
-    const res = [];
-    fields.forEach(item => {
+    const res: (string | Record<string, string>)[] = [];
+    (fields as Array<string | Record<string, string>>).forEach((item) => {
       if (typeOf(item) === 'object') {
         res.push(item);
       } else if (typeOf(item) === 'string') {
-        item = item.trim();
+        item = (item as string).trim();
         item && res.push(item);
       }
     });
@@ -120,16 +132,16 @@ class Mysql {
    * @param {Array|string} columns 分组列名，可为数组或字符串，字符串以逗号分隔
    * @return {Mysql} 实例
    */
-  group(columns) {
+  group(columns: Array<any> | string): Mysql {
     const type = typeOf(columns);
     if (type !== 'string' && type !== 'array') {
       console.warn('[@hyoga/mysql] function group params must be type of "string" or "array"');
       return this;
     }
     if (type === 'array') {
-      columns = columns.join(', ');
+      columns = (columns as Array<any>).join(', ');
     }
-    this._group = columns;
+    this._group = columns as string;
     return this;
   }
 
@@ -139,69 +151,69 @@ class Mysql {
    * @example
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') limit 1
    * mysql.table('admins').where({ status: 'on' }).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (id = 10 OR id < 2) limit 1
    * mysql.table('admins').where('id = 10 OR id < 2').find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` != 1) limit 1
    * mysql.table('admins').where({id: ['!=', 1]}).find();
-   * 
+   *
    * // NULL操作
-   * 
+   *
    * SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NULL) limit 1
    * mysql.table('admins').where({id: null}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IS NOT NULL) limit 1
    * mysql.table('admins').where({id: [ '!=', null ]}).find();
-   * 
+   *
    * // LIKE 操作
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%') limit 1
    * mysql.table('admins').where({name: [ 'like', '%admin%' ]}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` NOT LIKE '%admin%') limit 1
    * mysql.table('admins').where({name: [ 'notlike', '%admin%' ]}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' OR `admins`.`email` LIKE '%admin%') limit 1
    * mysql.table('admins').where({'name|email': [ 'like', '%admin%' ]}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' AND `admins`.`email` LIKE '%admin%') limit 1
    * mysql.table('admins').where({'name&email': [ 'like', '%admin%' ]}).find();
-   * 
+   *
    * // 一对多操作
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`name` = 'admin' OR `admins`.`name` = 'editor') limit 1
    * mysql.table('admins').where({name: [ '=', [ 'admin', 'editor' ] ]}).find();
-   * 
+   *
    * // IN 操作
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5,10)) limit 1
    * mysql.table('admins').where({'id': [ 'in', [5, 10] ]}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` IN (5, 10)) limit 1
    * mysql.table('admins').where({'id': [ 'in', '5, 10' ]}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` NOT IN (5,10)) limit 1
    * mysql.table('admins').where({'id': [ 'notin', [5, 10] ]}).find();
-   * 
+   *
    * // BETWEEN 操作
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10) limit 1
    * mysql.table('admins').where({'id': [ 'between', [5, 10] ]}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 AND `admins`.`name` = 'admin') limit 1
    * mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin'}).find();
-   * 
-   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 OR `admins`.`name` = 'admin') limit 1 
+   *
+   * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 OR `admins`.`name` = 'admin') limit 1
    * mysql.table('admins').where({'id': [ 'between', [5, 10] ], 'name': 'admin', '_logic': 'OR'}).find();
-   * 
+   *
    * // 多字段操作
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 AND `admins`.`id` <= 10) limit 1
    * mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10}}).find();
-   * 
+   *
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 OR `admins`.`id` <= 10) limit 1
    * mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10, '_logic': 'OR'}}).find();
-   * 
+   *
    * @return {Mysql} 实例
    */
-  where(where) {
+  where(where: object | string): Mysql {
     const type = typeOf(where);
     if (type !== 'string' && type !== 'object') {
       console.warn('[@hyoga/mysql] function where params must be type of "object" or "string"');
@@ -210,7 +222,7 @@ class Mysql {
     if (type === 'object') {
       this._where._condition.push(where);
     } else {
-      this._where._sql.push(where);
+      this._where._sql.push(where as string);
     }
     return this;
   }
@@ -220,11 +232,11 @@ class Mysql {
    * @param {number} limit 结果的条数限制
    * @return {Mysql} 实例
    */
-  limit(limit) {
+  limit(limit: number): Mysql {
     const type = typeOf(limit);
     if (type !== 'number') {
       console.warn('[@hyoga/mysql] function limit params must be type of "number"');
-      limit = parseInt(limit);
+      limit = parseInt('' + limit);
       if (isNaN(limit)) {
         return this;
       }
@@ -239,9 +251,9 @@ class Mysql {
    * @param {number} pageSize 每页大小
    * @return {Mysql} 实例
    */
-  page(page = 1, pageSize = 1) {
-    page = parseInt(page);
-    pageSize = parseInt(pageSize);
+  page(page: number = 1, pageSize: number = 1): Mysql {
+    page = parseInt('' + page);
+    pageSize = parseInt('' + pageSize);
     page = isNaN(page) ? 1 : page;
     pageSize = isNaN(pageSize) ? 1 : pageSize;
     const offset = (page - 1) * pageSize;
@@ -254,7 +266,7 @@ class Mysql {
    * @param {object} data 数据
    * @return {Mysql} 实例
    */
-  data(data) {
+  data(data: object): Mysql {
     if (typeOf(data) !== 'object') {
       console.warn('[@hyoga/mysql] function {data} params must be type of "object"');
       return this;
@@ -269,22 +281,22 @@ class Mysql {
    * @example
    * // SELECT `article_categorys`.`*` FROM `article_categorys` ORDER BY id desc
    * mysql.table('article_categorys').order('id desc').select();
-   * 
+   *
    * //SELECT `article_categorys`.`*` FROM `article_categorys` ORDER BY id desc, name asc
    * mysql.table('article_categorys').order([ 'id desc', 'name asc' ]).select();
-   * 
+   *
    * @return {Mysql} 实例
    */
-  order(order) {
+  order(order: Array<string> | string): Mysql {
     const type = typeOf(order);
     if (type !== 'array' && type !== 'string') {
       console.warn('[@hyoga/mysql] function {order} params must be type of "array" or "string"');
       return this;
     }
     if (type === 'array') {
-      order = order.join(', ');
+      order = (order as Array<string>).join(', ');
     }
-    this._order = order;
+    this._order = order as string;
     return this;
   }
 
@@ -307,10 +319,10 @@ class Mysql {
    *    on: { category_id: 'id' }
    *  }
    * }).find();
-   * 
+   *
    * @return {Mysql} 实例
    */
-  join(join) {
+  join(join: object): Mysql {
     const type = typeOf(join);
     if (type !== 'object') {
       console.warn('[@hyoga/mysql] function {join} params must be type of "object"');
@@ -325,7 +337,7 @@ class Mysql {
    * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  async find(where = null) {
+  async find(where?: object | string): Promise<any> {
     where && this.where(where);
     this._limit = 1;
     const data = await this.select();
@@ -337,7 +349,7 @@ class Mysql {
    * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  select(where = null) {
+  select(where?: object | string): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -368,7 +380,7 @@ class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  update(column, where = null) {
+  update(column: object, where?: object | string): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -377,7 +389,7 @@ class Mysql {
     sql += this._tableName;
     sql += this._tableAlias ? ` as ${this._tableAlias} SET ` : ' SET ';
 
-    const tmpArr = [];
+    const tmpArr: string[] = [];
     for (const i in column) {
       let tmp = '';
       // 检测数据中是否含有加减号
@@ -385,7 +397,7 @@ class Mysql {
       if (match) {
         tmp = this._formatFieldsName(i) + ' = ' + this._formatFieldsName(i) + match[1] + match[2];
       } else {
-        tmp = this._formatFieldsName(i) + ' = \'' + column[i] + '\'';
+        tmp = this._formatFieldsName(i) + " = '" + column[i] + "'";
       }
       tmpArr.push(tmp);
     }
@@ -401,7 +413,7 @@ class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  updateMany(columnList) {
+  updateMany(columnList: object[]): Promise<any> {
     if (!columnList || !columnList.length) {
       throw new Error('unknown data list!');
     }
@@ -418,7 +430,7 @@ class Mysql {
    * @param {number} step 自增数，默认1
    * @return {Promise<any>} 更新结果
    */
-  increase(field, step = 1) {
+  increase(field: string, step: number = 1): Promise<any> {
     const item = {};
     item[field] = '+' + step;
     return this.update(item);
@@ -430,7 +442,7 @@ class Mysql {
    * @param {number} step 自减数，默认1
    * @return {Promise<any>} 更新结果
    */
-  decrement(field, step = 1) {
+  decrement(field: string, step: number = 1): Promise<any> {
     const item = {};
     item[field] = '-' + step;
     return this.update(item);
@@ -439,19 +451,19 @@ class Mysql {
   /**
    * 新增数据
    * @param {object} column 字段键值对
-   * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}，使用时 column 字段需要包含主键，参考sql ON DUPLICATE KEY UPDATE 用法
+   * @param {object | false} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}，使用时 column 字段需要包含主键，参考sql ON DUPLICATE KEY UPDATE 用法
    * @return {Promise<any>} 操作结果
    */
-  add(column, duplicate = false) {
+  add(column: object, duplicate: object | false = false): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
     let sql = 'INSERT INTO ' + this._tableName;
-    const keyArr = [];
-    const valueArr = [];
+    const keyArr: string[] = [];
+    const valueArr: string[] = [];
     for (const i in column) {
       keyArr.push('`' + i + '`');
-      valueArr.push('\'' + column[i] + '\'');
+      valueArr.push("'" + column[i] + "'");
     }
     sql += ' (' + keyArr.join(',') + ')';
     sql += ' VALUES (' + valueArr.join(',') + ')';
@@ -459,13 +471,13 @@ class Mysql {
     if (duplicate) {
       sql += ' ON DUPLICATE KEY UPDATE ';
       // 引用字段
-      const tmpArr = [];
+      const tmpArr: string[] = [];
       for (let key in duplicate) {
         const value = duplicate[key];
-        if (/VALUES\(/ig.test(value)) {
+        if (/VALUES\(/gi.test(value)) {
           tmpArr.push('`' + key + '`=' + value);
         } else {
-          tmpArr.push('`' + key + '`=\'' + value + '\'');
+          tmpArr.push('`' + key + "`='" + value + "'");
         }
       }
       sql += tmpArr.join(',');
@@ -476,11 +488,11 @@ class Mysql {
 
   /**
    * 批量新增数据
-   * @param {object} columnList 字段键值对数组
-   * @param {object} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
+   * @param {Record<string, any>} columnList 字段键值对数组
+   * @param {object | false} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
-  addMany(columnList, duplicate = false) {
+  addMany(columnList: Record<string, any>[], duplicate: object | false = false): Promise<any> {
     if (!columnList || !columnList.length) {
       throw new Error('unknown data list!');
     }
@@ -488,11 +500,11 @@ class Mysql {
       throw new Error('unknown table name!');
     }
     let sql = 'INSERT INTO ' + this._tableName;
-    const keyArr = [];
-    const valueArr = [];
+    const keyArr: string[] = [];
+    const valueArr: string[][] = [];
     let keyOk = false;
-    columnList.forEach(column => {
-      const arr = [];
+    columnList.forEach((column) => {
+      const arr: string[] = [];
       for (const i in column) {
         !keyOk && keyArr.push('`' + i + '`');
         arr.push(`'${column[i]}'`);
@@ -500,23 +512,24 @@ class Mysql {
       valueArr.push(arr);
       keyOk = true;
     });
-    const values = valueArr.map(item => {
+    const values = valueArr.map((item) => {
       return `(${item.join(',')})`;
     });
-    
-    sql += ` (${keyArr.join(',')})`;' (' + keyArr.join(',') + ')';
+
+    sql += ` (${keyArr.join(',')})`;
+    ' (' + keyArr.join(',') + ')';
     sql += ` VALUES ${values.join(',')}`;
 
     if (duplicate) {
       sql += ' ON DUPLICATE KEY UPDATE ';
       // 引用字段
-      const tmpArr = [];
+      const tmpArr: string[] = [];
       for (let key in duplicate) {
         const value = duplicate[key];
-        if (/VALUES\(/ig.test(value)) {
+        if (/VALUES\(/gi.test(value)) {
           tmpArr.push('`' + key + '`=' + value);
         } else {
-          tmpArr.push('`' + key + '`=\'' + value + '\'');
+          tmpArr.push('`' + key + "`='" + value + "'");
         }
       }
       sql += tmpArr.join(',');
@@ -530,7 +543,7 @@ class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 操作结果
    */
-  delete(where) {
+  delete(where: object | string): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -542,37 +555,67 @@ class Mysql {
   }
 
   /**
-   * 获取数据连接
-   * @private
-   * @return {Mysql.connection} 数据库连接对象
+   * 清空数据表
+   * @returns {Promise<any>} 执行结果
    */
-  _getConnection() {
-    const connection = createConnection(this.config);
+  truncate(): Promise<any> {
+    if (!this._tableName) {
+      throw new Error('unknown tableName!');
+    }
+    this.sql = `TRUNCATE table ${this._tableName}`;
+    return this.query(this.sql);
+  }
 
-    connection.connect(err => {
-      if (err) {
-        console.error('[@hyoga/mysql] MYSQL_CONNECT_ERROR：', err);
-      }
-    });
-    connection.on('error', err => {
-      console.error('[@hyoga/mysql] MYSQL_RUNTIME_ERROR：', err);
-      if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-        console.info('[@hyoga/mysql] MYSQL_RECONNECTING...');
-      } else {
-        throw err;
-      }
-    });
-    return connection;
+  /**
+   * 替换数据
+   * @param {Record<string, any>} column
+   * @returns {Promise<any>} 执行结果
+   */
+  replace(column: Record<string, any>): Promise<any> {
+    if (!this._tableName) {
+      throw new Error('unknown table name!');
+    }
+    let keys = Object.keys(column)
+      .map((it) => `\`${it}\``)
+      .join(',');
+    let values = Object.values(column)
+      .map((it) => {
+        return `\'${it}\'`;
+      })
+      .join(',');
+
+    this.sql = `REPLACE INTO ${this._tableName} (${keys}) values (${values})`;
+    return this.query(this.sql);
   }
 
   /**
    * 关闭数据库连接
-   * @private
-   * @param {connection} connection mysql连接对象
    * @return {void}
    */
-  close(connection) {
-    connection.end();
+  close(): void {
+    this.pool.end();
+  }
+
+  /**
+   * 获取数据连接
+   * @private
+   * @return {PoolConnection} 数据库连接对象
+   */
+  private _getConnection(): Promise<PoolConnection> {
+    if (!this.pool) {
+      this.pool = createPool(this.config);
+    }
+
+    return new Promise((resolve, reject) => {
+      this.pool.getConnection((err, connection) => {
+        if (err) {
+          console.error('[@hyoga/mysql] MYSQL_CONNECT_ERROR：', err);
+          reject(err);
+        } else {
+          resolve(connection);
+        }
+      });
+    });
   }
 
   /**
@@ -580,10 +623,10 @@ class Mysql {
    * @private
    * @return {void}
    */
-  _resetParams() {
+  private _resetParams(): void {
     this._tableName = '';
     this._tableAlias = '';
-    this._fields = [ '*' ];
+    this._fields = ['*'];
     this._where = { _sql: [], _condition: [] };
     this._limit = '';
     this._order = '';
@@ -597,7 +640,7 @@ class Mysql {
    * @private
    * @return {string} 需要选择的字段拼接结果
    */
-  _formatFields() {
+  private _formatFields(): string {
     if (!this._fields.length) {
       return '*';
     }
@@ -607,14 +650,14 @@ class Mysql {
     this._fields.forEach((item, index) => {
       res += index > 0 ? ', ' : '';
       if (typeOf(item) === 'object') {
-        for (const i in item) {
+        for (const i in item as Record<string, any>) {
           res += this._formatFieldsName(i) + ' as ' + item[i];
         }
       } else if (item.includes(' as ')) {
         const tmp = item.split(' as ');
         res += this._formatFieldsName(tmp[0]) + ' as ' + tmp[1];
       } else {
-        res += this._formatFieldsName(item);
+        res += this._formatFieldsName(item as string);
       }
     });
     return res;
@@ -626,7 +669,7 @@ class Mysql {
    * @param {string} field 字段名
    * @return {string} 字段名处理结果
    */
-  _formatFieldsName(field) {
+  private _formatFieldsName(field: string): string {
     let table = this._tableAlias || this._tableName;
     let res = '';
     let fieldName = '';
@@ -655,7 +698,7 @@ class Mysql {
    * @private
    * @return {string} join操作的拼接结果
    */
-  _formatJoin() {
+  private _formatJoin(): string {
     if (!this._join || isEmptyObject(this._join)) {
       return '';
     }
@@ -671,7 +714,7 @@ class Mysql {
       joinStr += item.as ? ' AS ' + item.as : '';
       joinStr += ' ON (';
 
-      const tmpArr = [];
+      const tmpArr: string[] = [];
       const subTable = item.as ? item.as : i;
       for (const ti in item.on) {
         if (typeOf(item.on) === 'string') {
@@ -690,28 +733,28 @@ class Mysql {
    * @private
    * @return {string} where条件的拼接结果
    */
-  _formatWhere() {
-    const sqlStr = this._where._sql.map(item => `(${item})`).join(' AND ');
-    const sqlCondition = [];
-    this._where._condition.forEach(item => {
+  private _formatWhere(): string {
+    const sqlStr = this._where._sql.map((item) => `(${item})`).join(' AND ');
+    const sqlCondition: string[] = [];
+    this._where._condition.forEach((item) => {
       const singleWhere = {};
-      const multiples2sql = [];
+      const multiples2sql: string[] = [];
 
       /* 将多字段名数据单独处理，并将值是字符串的数据转化为数组，便于统一处理 */
       const keys = Object.keys(item);
-      keys.forEach(key => {
+      keys.forEach((key) => {
         let val = item[key];
         if (typeOf(val) === 'null') {
-          val = [ 'IS', 'NULL'];
+          val = ['IS', 'NULL'];
         } else if (key.indexOf('_') !== 0 && typeOf(val) !== 'array' && typeOf(val) !== 'object') {
-          val = [ '=', val ];
+          val = ['=', val];
         }
         /* 将多字段名的数据单独处理 {'title|content': ['like', '%javascript%']} */
-        const _logic = key.indexOf('|') !== -1 ? 'OR' : ( key.indexOf('&') !== -1 ? 'AND' : '');
+        const _logic = key.indexOf('|') !== -1 ? 'OR' : key.indexOf('&') !== -1 ? 'AND' : '';
         if (_logic) {
           const multiple = { _logic };
           const multipleKeys = key.split(_logic === 'OR' ? '|' : '&');
-          multipleKeys.forEach(m => {
+          multipleKeys.forEach((m) => {
             multiple[m] = val;
           });
           const tmp = this._formatWhereItem(multiple);
@@ -721,26 +764,26 @@ class Mysql {
         }
       });
       const single2sql = this._formatWhereItem(singleWhere);
-      let sqls = [];
-      single2sql && sqls.push(single2sql);
-      const sql = [...sqls, ...multiples2sql].join(' AND');
+      const slqList: string[] = [];
+      single2sql && slqList.push(single2sql);
+      const sql = [...slqList, ...multiples2sql].join(' AND');
       sql && sqlCondition.push(sql);
     });
-    let res = [];
+    const res: string[] = [];
     sqlStr && res.push(sqlStr);
-    res = [...res, ...sqlCondition].join(' AND ');
-    return res ? ` WHERE ${res}` : '';
+    const dist = [...res, ...sqlCondition].join(' AND ');
+    return dist ? ` WHERE ${dist}` : '';
   }
 
   /**
    * 格式化单个的where条件，每个都是一个完整的对象模式
    * @private
-   * @param {object} where
-   * @return {string} 处理好的sql 
+   * @param {Record<string, any>} where
+   * @return {string} 处理好的sql
    */
-  _formatWhereItem(where) {
+  private _formatWhereItem(where: Record<string, any>): string {
     if (isEmptyObject(where)) return '';
-    const res = [];
+    const res: string[] = [];
     let _logic = 'AND';
     if (where._logic) {
       _logic = where._logic;
@@ -752,7 +795,7 @@ class Mysql {
       fieldName = this._formatFieldsName(fieldName);
       if (typeOf(val) === 'array') {
         operate = val[0].trim();
-        val = typeOf( val[1] ) === 'array' ? val[1] : [ val[1] ];
+        val = typeOf(val[1]) === 'array' ? val[1] : [val[1]];
       }
       res.push(this._formatWhereItemValue(operate, fieldName, val));
     }
@@ -763,35 +806,35 @@ class Mysql {
   /**
    * 拼接某个字段的sql语句
    * @private
-   * @param {string} operate 操作符 = LIKE 等 
+   * @param {string} operate 操作符 = LIKE 等
    * @param {string} fieldName 字段名
-   * @param {array|object} value 字段的值，数组或者对象模式，对象模式下，key是操作符，覆盖 operate 参数
+   * @param {array|Record<string, any>} value 字段的值，数组或者对象模式，对象模式下，key是操作符，覆盖 operate 参数
    * @return {string} 拼接好的一个字段值的sql语句
    */
-  _formatWhereItemValue(operate, fieldName, value) {
+  private _formatWhereItemValue(operate: string, fieldName: string, value: Array<any> | Record<string, any>): string {
     operate = operate.trim().toLocaleUpperCase();
     const type = typeOf(value);
     if (type === 'array') {
       const len = value.length;
       if (len === 1) {
         return this._getOperateResultSql(operate, fieldName, value[0]);
-      } else if (len > 1 &&  ( 
-        ( operate === 'IN' || operate === 'NOTIN' || operate === 'NOT IN' ) || 
-        ( operate === 'BETWEEN' ) 
-      )) {
-        return this._getOperateResultSql(operate, fieldName, value);
+      } else if (
+        len > 1 &&
+        (operate === 'IN' || operate === 'NOTIN' || operate === 'NOT IN' || operate === 'BETWEEN')
+      ) {
+        return this._getOperateResultSql(operate, fieldName, value as Array<any>);
       } else {
-        const res = value.map(item => {
+        const res: string[] = value.map((item) => {
           return this._getOperateResultSql(operate, fieldName, item);
         });
         return res.join(' OR ');
       }
     } else if (type === 'object') {
-      const res = [];
+      const res: string[] = [];
       let _logic = 'AND';
-      if (value._logic) {
-        _logic = value._logic;
-        delete value._logic;
+      if ((value as Record<string, any>)._logic) {
+        _logic = (value as Record<string, any>)._logic;
+        delete (value as Record<string, any>)._logic;
       }
       for (const name in value) {
         const tmp = this._getOperateResultSql(name, fieldName, value[name]);
@@ -799,17 +842,18 @@ class Mysql {
       }
       return res.join(` ${_logic} `);
     }
+    return '';
   }
 
   /**
    * 主要针对操作符做一些特殊处理，比如IN BETWEEN等
    * @private
-   * @param {string} operate 操作符 = LIKE 等 
+   * @param {string} operate 操作符 = LIKE 等
    * @param {string} fieldName 字段名
    * @param {array|string} value 字段的值，数组或者字符串，字符串表示某个值，数组一般表示IN或者BETWEEN的范围
    * @return {string} 拼接好的sql语句
    */
-  _getOperateResultSql(operate, fieldName, value) {
+  private _getOperateResultSql(operate: string, fieldName: string, value: Array<any> | string): string {
     const valueType = typeOf(value);
     if (operate === 'NOTLIKE') {
       operate = 'NOT LIKE';
@@ -820,12 +864,12 @@ class Mysql {
     }
     if (operate === 'IN' || operate === 'NOTIN' || operate === 'NOT IN') {
       if (operate === 'NOTIN') {
-        operate = 'NOT IN'
+        operate = 'NOT IN';
       }
       if (valueType !== 'array') {
-        value = [ value ];
+        value = [value];
       }
-      return `${fieldName} ${operate} (${value.join(',')})`;
+      return `${fieldName} ${operate} (${(value as any[]).join(',')})`;
     }
     if (operate === 'BETWEEN') {
       if (valueType !== 'array' || value.length < 2) return '';
@@ -839,43 +883,7 @@ class Mysql {
    * 打印生成的sql语句，用于调试
    * @return {string} 生成的sql语句
    */
-  _sql() {
+  _sql(): string {
     return this.sql;
   }
-
-
-
-  /**
-   * 清空数据表
-   */
-  truncate() {
-    if ( !this._tableName ) {
-      throw new Error( 'unknown tableName!' );
-    }
-    let sql = `TRUNCATE table ${this._tableName}`
-    this.sql = sql
-    return this.query( sql )
-  }
-
-  /**
-   * 替换数据
-   * @param {object} column 
-   */
-  replace( column ) {
-    if ( !this._tableName ) {
-      throw new Error( 'unknown table name!' );
-    }
-    let keys = Object.keys( column ).map( it => `\`${it}\`` ).join( ',' )
-    let values = Object.values( column ).map( it => {
-      return `\'${it}\'`
-    } ).join( ',' )
-
-    let sql = `REPLACE INTO ${this._tableName} (${keys}) values (${values})`
-    this.sql = sql
-    return this.query( sql )
-  }
-
-
 }
-
-module.exports = Mysql;
