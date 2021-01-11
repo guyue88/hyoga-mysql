@@ -9,6 +9,7 @@ const { typeOf, isEmptyObject } = require('../utils/util');
  * @author <lq9328@126.com>
  */
 class Mysql {
+   connection = null
   /**
    * 创建Mysql实例
    * @param {object} config 数据库连接配置
@@ -24,6 +25,7 @@ class Mysql {
     };
     this.sql = '';
     this._resetParams();
+    this.connection = this._getConnection();
   }
 
   /**
@@ -32,11 +34,12 @@ class Mysql {
    * @return {Promise<any>} sql执行结果
    */
   query(sql) {
+    if ( !this.connection ) {
+      throw new Error( 'not connection' );
+    }
     this._resetParams();
-    const connection = this._getConnection();
     return new Promise((resolve, reject) => {
       connection.query(sql, (err, rows) => {
-        this._close(connection);
         if (err) {
           console.error('[@hyoga/mysql] MYSQL_EXECUTED_ERROR', err);
           reject(err);
@@ -568,7 +571,7 @@ class Mysql {
    * @param {connection} connection mysql连接对象
    * @return {void}
    */
-  _close(connection) {
+  close(connection) {
     connection.end();
   }
 
@@ -839,6 +842,40 @@ class Mysql {
   _sql() {
     return this.sql;
   }
+
+
+
+  /**
+   * 清空数据表
+   */
+  truncate() {
+    if ( !this._tableName ) {
+      throw new Error( 'unknown tableName!' );
+    }
+    let sql = `TRUNCATE table ${this._tableName}`
+    this.sql = sql
+    return this.query( sql )
+  }
+
+  /**
+   * 替换数据
+   * @param {object} column 
+   */
+  replace( column ) {
+    if ( !this._tableName ) {
+      throw new Error( 'unknown table name!' );
+    }
+    let keys = Object.keys( column ).map( it => `\`${it}\`` ).join( ',' )
+    let values = Object.values( column ).map( it => {
+      return `\'${it}\'`
+    } ).join( ',' )
+
+    let sql = `REPLACE INTO ${this._tableName} (${keys}) values (${values})`
+    this.sql = sql
+    return this.query( sql )
+  }
+
+
 }
 
 module.exports = Mysql;
