@@ -5,7 +5,8 @@
     "outDir": "./dist/",
     "moduleResolution": "node",
     "strictNullChecks": true,
-    "declaration": true
+    "declaration": true,
+    "noImplicitAny": false
   },
   "exclude": ["./node_modules/", "./dist/"],
   "include": ["./src/"]

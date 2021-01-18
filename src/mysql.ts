@@ -4,6 +4,8 @@ import { typeOf, isEmptyObject } from './utils';
 
 const log = debug('Hyoga');
 
+export type Config = PoolConfig;
+
 /**
  * Mysql数据库实例，封装了常用操作方式
  * @module @hyoga/mysql
@@ -17,7 +19,7 @@ export default class Mysql {
   private _tableAlias: string;
   private _fields: (string | Record<string, any>)[];
   private _group: string;
-  private _where: { _condition: Object[]; _sql: string[] };
+  private _where: { _condition: Record<string, any>[]; _sql: string[] };
   private _limit: number | string;
   private _data: Record<string, any>;
   private _order: string;
@@ -109,8 +111,7 @@ export default class Mysql {
     const type = typeOf(fields);
     if (type === 'string') {
       fields = (fields as string).split(',');
-    } else if (type === 'array') {
-    } else {
+    } else if (type !== 'array') {
       console.warn('[@hyoga/mysql] function field params must be type of "string" or "array"');
       fields = ['*'];
     }
@@ -213,14 +214,14 @@ export default class Mysql {
    *
    * @return {Mysql} 实例
    */
-  where(where: object | string): Mysql {
+  where(where: Record<string, any> | string): Mysql {
     const type = typeOf(where);
     if (type !== 'string' && type !== 'object') {
       console.warn('[@hyoga/mysql] function where params must be type of "object" or "string"');
       return this;
     }
     if (type === 'object') {
-      this._where._condition.push(where);
+      this._where._condition.push(where as Record<string, any>);
     } else {
       this._where._sql.push(where as string);
     }
@@ -251,7 +252,7 @@ export default class Mysql {
    * @param {number} pageSize 每页大小
    * @return {Mysql} 实例
    */
-  page(page: number = 1, pageSize: number = 1): Mysql {
+  page(page = 1, pageSize = 1): Mysql {
     page = parseInt('' + page);
     pageSize = parseInt('' + pageSize);
     page = isNaN(page) ? 1 : page;
@@ -266,7 +267,7 @@ export default class Mysql {
    * @param {object} data 数据
    * @return {Mysql} 实例
    */
-  data(data: object): Mysql {
+  data(data: Record<string, any>): Mysql {
     if (typeOf(data) !== 'object') {
       console.warn('[@hyoga/mysql] function {data} params must be type of "object"');
       return this;
@@ -322,7 +323,7 @@ export default class Mysql {
    *
    * @return {Mysql} 实例
    */
-  join(join: object): Mysql {
+  join(join: Record<string, any>): Mysql {
     const type = typeOf(join);
     if (type !== 'object') {
       console.warn('[@hyoga/mysql] function {join} params must be type of "object"');
@@ -337,7 +338,7 @@ export default class Mysql {
    * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  async find(where?: object | string): Promise<any> {
+  async find(where?: Record<string, any> | string): Promise<any> {
     where && this.where(where);
     this._limit = 1;
     const data = await this.select();
@@ -349,7 +350,7 @@ export default class Mysql {
    * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  select(where?: object | string): Promise<any> {
+  select(where?: Record<string, any> | string): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -380,7 +381,7 @@ export default class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  update(column: object, where?: object | string): Promise<any> {
+  update(column: Record<string, any>, where?: Record<string, any> | string): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -393,10 +394,11 @@ export default class Mysql {
     for (const i in column) {
       let tmp = '';
       // 检测数据中是否含有加减号
-      const match = (column[i] + '').match(/^(\+|\-)([^+-]+)$/);
+      const match = (column[i] + '').match(/^(\+|-)([^+-]+)$/);
       if (match) {
         tmp = this._formatFieldsName(i) + ' = ' + this._formatFieldsName(i) + match[1] + match[2];
       } else {
+        // eslint-disable-next-line quotes
         tmp = this._formatFieldsName(i) + " = '" + column[i] + "'";
       }
       tmpArr.push(tmp);
@@ -413,12 +415,12 @@ export default class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  updateMany(columnList: object[]): Promise<any> {
+  updateMany(columnList: Record<string, any>[]): Promise<any> {
     if (!columnList || !columnList.length) {
       throw new Error('unknown data list!');
     }
     const duplicate = {};
-    for (let key in columnList[0]) {
+    for (const key in columnList[0]) {
       duplicate[key] = `VALUES(${key})`;
     }
     return this.addMany(columnList, duplicate);
@@ -430,7 +432,7 @@ export default class Mysql {
    * @param {number} step 自增数，默认1
    * @return {Promise<any>} 更新结果
    */
-  increase(field: string, step: number = 1): Promise<any> {
+  increase(field: string, step = 1): Promise<any> {
     const item = {};
     item[field] = '+' + step;
     return this.update(item);
@@ -442,7 +444,7 @@ export default class Mysql {
    * @param {number} step 自减数，默认1
    * @return {Promise<any>} 更新结果
    */
-  decrement(field: string, step: number = 1): Promise<any> {
+  decrement(field: string, step = 1): Promise<any> {
     const item = {};
     item[field] = '-' + step;
     return this.update(item);
@@ -454,7 +456,7 @@ export default class Mysql {
    * @param {object | false} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}，使用时 column 字段需要包含主键，参考sql ON DUPLICATE KEY UPDATE 用法
    * @return {Promise<any>} 操作结果
    */
-  add(column: object, duplicate: object | false = false): Promise<any> {
+  add(column: Record<string, any>, duplicate: Record<string, any> | false = false): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -463,6 +465,7 @@ export default class Mysql {
     const valueArr: string[] = [];
     for (const i in column) {
       keyArr.push('`' + i + '`');
+      // eslint-disable-next-line quotes
       valueArr.push("'" + column[i] + "'");
     }
     sql += ' (' + keyArr.join(',') + ')';
@@ -472,11 +475,12 @@ export default class Mysql {
       sql += ' ON DUPLICATE KEY UPDATE ';
       // 引用字段
       const tmpArr: string[] = [];
-      for (let key in duplicate) {
+      for (const key in duplicate) {
         const value = duplicate[key];
         if (/VALUES\(/gi.test(value)) {
           tmpArr.push('`' + key + '`=' + value);
         } else {
+          // eslint-disable-next-line quotes
           tmpArr.push('`' + key + "`='" + value + "'");
         }
       }
@@ -492,7 +496,7 @@ export default class Mysql {
    * @param {object | false} duplicate 出现重复则更新，{id : 100, name : VALUES('test')}
    * @return {Promise<any>} 操作结果
    */
-  addMany(columnList: Record<string, any>[], duplicate: object | false = false): Promise<any> {
+  addMany(columnList: Record<string, any>[], duplicate: Record<string, any> | false = false): Promise<any> {
     if (!columnList || !columnList.length) {
       throw new Error('unknown data list!');
     }
@@ -524,11 +528,12 @@ export default class Mysql {
       sql += ' ON DUPLICATE KEY UPDATE ';
       // 引用字段
       const tmpArr: string[] = [];
-      for (let key in duplicate) {
+      for (const key in duplicate) {
         const value = duplicate[key];
         if (/VALUES\(/gi.test(value)) {
           tmpArr.push('`' + key + '`=' + value);
         } else {
+          // eslint-disable-next-line quotes
           tmpArr.push('`' + key + "`='" + value + "'");
         }
       }
@@ -543,7 +548,7 @@ export default class Mysql {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 操作结果
    */
-  delete(where: object | string): Promise<any> {
+  delete(where: Record<string, any> | string): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -575,12 +580,12 @@ export default class Mysql {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
-    let keys = Object.keys(column)
+    const keys = Object.keys(column)
       .map((it) => `\`${it}\``)
       .join(',');
-    let values = Object.values(column)
+    const values = Object.values(column)
       .map((it) => {
-        return `\'${it}\'`;
+        return `'${it}'`;
       })
       .join(',');
 

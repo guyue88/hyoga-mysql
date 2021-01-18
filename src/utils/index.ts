@@ -1,4 +1,4 @@
-export function htmlspecialchars(str) {
+export function htmlspecialchars(str: string) {
   if (!str) return '';
   if (this.typeOf(str) !== 'string') {
     return str;
@@ -15,7 +15,7 @@ export function htmlspecialchars(str) {
   return str;
 }
 
-export function htmlspecialchars_decode(str) {
+export function htmlspecialchars_decode(str: string) {
   const reg = {
     '&quot;': '"',
     '&amp;': '&',
@@ -28,7 +28,7 @@ export function htmlspecialchars_decode(str) {
   });
 }
 
-export function isEmptyObject(obj) {
+export function isEmptyObject(obj: Record<string | number, any>) {
   let name;
   for (name in obj) {
     return false;
@@ -36,14 +36,14 @@ export function isEmptyObject(obj) {
   return true;
 }
 
-export function getTime(fmt) {
+export function getTime(fmt: string) {
   fmt = fmt || 'yyyy-MM-dd hh:mm:ss';
   return this.timeFormat(new Date(), fmt);
 }
 
 // timeFormat('yyyy-MM-dd hh:mm:ss')
 // timeFormat('yyyy-M-d h:m:s')
-export function timeFormat(time, fmt) {
+export function timeFormat(time: Date, fmt: string) {
   if (!time && this.typeOf(time) !== 'date') return time || null;
   const o = {
     'M+': time.getMonth() + 1, // 月份
@@ -64,7 +64,7 @@ export function timeFormat(time, fmt) {
 }
 
 export function typeOf(
-  o
+  o: any
 ):
   | 'undefined'
   | 'number'
