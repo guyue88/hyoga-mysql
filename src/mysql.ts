@@ -24,6 +24,7 @@ export default class Mysql {
   private _data: Record<string, any>;
   private _order: string;
   private _join: Record<string, any>;
+  private _prefix: string;
 
   /**
    * 创建Mysql实例
@@ -79,7 +80,17 @@ export default class Mysql {
       console.warn('[@hyoga/mysql] function table params must be type of "string"');
       return this;
     }
-    this._tableName = tableName;
+    this._tableName = `${this._prefix}${tableName}`;
+    return this;
+  }
+
+  /**
+   * 设置表前缀
+   * @param {string} prefix 表前缀，v1.1.2起支持
+   * @return {Mysql} 实例
+   */
+  prefix(prefix: string) {
+    this._prefix = prefix;
     return this;
   }
 
@@ -638,6 +649,7 @@ export default class Mysql {
     this._join = {};
     this._data = {};
     this._group = '';
+    this._prefix = '';
   }
 
   /**
