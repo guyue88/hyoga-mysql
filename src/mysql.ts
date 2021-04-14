@@ -4,17 +4,68 @@ import { typeOf, isEmptyObject } from './utils';
 
 const log = debug('Hyoga');
 
-export type Config = PoolConfig;
+export type Config = PoolConfig & {
+  prefix?: string;
+};
 
-/**
- * Mysql数据库实例，封装了常用操作方式
- * @module @hyoga/mysql
- * @author <lq9328@126.com>
- */
-export default class Mysql {
+class MysqlPool {
+  private static instance: MysqlPool;
   private pool: Pool;
-  private config: PoolConfig;
-  private sql: string;
+  private config: Config;
+
+  /**
+   * 创建Mysql实例
+   * @param {object} config 数据库连接配置
+   */
+  constructor(config: Config) {
+    this.config = config;
+  }
+
+  /**
+   * 获取实例
+   * @param {object} config 数据库连接配置
+   */
+  public static getInstance(config: Config) {
+    if (!this.instance) {
+      this.instance = new MysqlPool(config);
+    }
+    return this.instance;
+  }
+
+  /**
+   * 关闭数据库连接
+   * @return {void}
+   */
+  public close(): void {
+    this.pool && this.pool.end();
+  }
+
+  /**
+   * 获取数据连接
+   * @private
+   * @return {PoolConnection} 数据库连接对象
+   */
+  public getConnection(): Promise<PoolConnection> {
+    if (!this.pool) {
+      this.pool = createPool(this.config);
+    }
+
+    return new Promise((resolve, reject) => {
+      this.pool.getConnection((err, connection) => {
+        if (err) {
+          console.error('[@hyoga/mysql] MYSQL_CONNECT_ERROR：', err);
+          reject(err);
+        } else {
+          resolve(connection);
+        }
+      });
+    });
+  }
+}
+
+class Builder {
+  private query: (sql: string) => Promise<any>;
+
   private _tableName: string;
   private _tableAlias: string;
   private _fields: (string | Record<string, any>)[];
@@ -24,82 +75,19 @@ export default class Mysql {
   private _data: Record<string, any>;
   private _order: string;
   private _join: Record<string, any>;
-  private _prefix: string;
 
-  /**
-   * 创建Mysql实例
-   * @param {object} config 数据库连接配置
-   */
-  constructor(config: PoolConfig) {
-    this.config = {
-      port: 3306,
-      multipleStatements: true,
-      connectionLimit: 100,
-      host: '',
-      user: '',
-      password: '',
-      database: '',
-      ...config,
-    };
-    this.sql = '';
+  constructor(tableName: string, query: (sql: string) => Promise<any>) {
     this._resetParams();
-  }
-
-  /**
-   * 直接执行sql语句
-   * @param {string} sql sql语句
-   * @return {Promise<any>} sql执行结果
-   */
-  async query(sql: string): Promise<any> {
-    const connection = await this._getConnection();
-    this._resetParams();
-    return new Promise((resolve, reject) => {
-      connection.query(sql, (err, rows) => {
-        if (err) {
-          console.error('[@hyoga/mysql] MYSQL_EXECUTED_ERROR', err);
-          reject(err);
-        } else {
-          log(`[@hyoga/mysql] ${this._sql()}`);
-          resolve(rows);
-        }
-        connection.release();
-      });
-    });
-  }
-
-  /**
-   * 设置表名
-   * @param {string} tableName 表名
-   * @return {Mysql} 实例
-   */
-  table(tableName: string): Mysql {
-    if (!tableName) {
-      throw new Error('unknown tableName!');
-    }
-    if (typeOf(tableName) !== 'string') {
-      console.warn('[@hyoga/mysql] function table params must be type of "string"');
-      return this;
-    }
-    this._tableName = `${this._prefix}${tableName}`;
-    return this;
-  }
-
-  /**
-   * 设置表前缀
-   * @param {string} prefix 表前缀，v1.1.2起支持
-   * @return {Mysql} 实例
-   */
-  prefix(prefix: string) {
-    this._prefix = prefix;
-    return this;
+    this._tableName = tableName;
+    this.query = query;
   }
 
   /**
    * 设置表的别名
    * @param {string} tableAlias 主表别名
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  alias(tableAlias: string): Mysql {
+  alias(tableAlias: string): Builder {
     if (typeOf(tableAlias) !== 'string') {
       console.warn('[@hyoga/mysql] function table params must be type of "string"');
       return this;
@@ -116,9 +104,9 @@ export default class Mysql {
    * mysql.table('admins').field('id, name').find();
    * // SELECT `admins`.`id`, `admins`.`name` as a, `admins`.`status` as b FROM `admins` limit 1
    * mysql.table('admins').field(['id', 'name as a', { status: 'b' }]).find();
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  field(fields: string | Array<string | Record<string, string>>): Mysql {
+  field(fields: string | Array<string | Record<string, string>>): Builder {
     const type = typeOf(fields);
     if (type === 'string') {
       fields = (fields as string).split(',');
@@ -142,9 +130,9 @@ export default class Mysql {
   /**
    * group by 操作
    * @param {Array|string} columns 分组列名，可为数组或字符串，字符串以逗号分隔
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  group(columns: Array<any> | string): Mysql {
+  group(columns: Array<any> | string): Builder {
     const type = typeOf(columns);
     if (type !== 'string' && type !== 'array') {
       console.warn('[@hyoga/mysql] function group params must be type of "string" or "array"');
@@ -223,9 +211,9 @@ export default class Mysql {
    * // SELECT `admins`.`*` FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 OR `admins`.`id` <= 10) limit 1
    * mysql.table('admins').where({'status': 'on'}).where({'id': {'>=': 1, '<=': 10, '_logic': 'OR'}}).find();
    *
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  where(where: Record<string, any> | string): Mysql {
+  where(where: Record<string, any> | string): Builder {
     const type = typeOf(where);
     if (type !== 'string' && type !== 'object') {
       console.warn('[@hyoga/mysql] function where params must be type of "object" or "string"');
@@ -242,9 +230,9 @@ export default class Mysql {
   /**
    * 设置结果的条数限制
    * @param {number} limit 结果的条数限制
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  limit(limit: number): Mysql {
+  limit(limit: number): Builder {
     const type = typeOf(limit);
     if (type !== 'number') {
       console.warn('[@hyoga/mysql] function limit params must be type of "number"');
@@ -261,9 +249,9 @@ export default class Mysql {
    * 分页操作
    * @param {number} page 当前页数
    * @param {number} pageSize 每页大小
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  page(page = 1, pageSize = 1): Mysql {
+  page(page = 1, pageSize = 1): Builder {
     page = parseInt('' + page);
     pageSize = parseInt('' + pageSize);
     page = isNaN(page) ? 1 : page;
@@ -276,9 +264,9 @@ export default class Mysql {
   /**
    * 设置数据
    * @param {object} data 数据
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  data(data: Record<string, any>): Mysql {
+  data(data: Record<string, any>): Builder {
     if (typeOf(data) !== 'object') {
       console.warn('[@hyoga/mysql] function {data} params must be type of "object"');
       return this;
@@ -291,15 +279,15 @@ export default class Mysql {
    * 排序
    * @param {array|string} order 排序
    * @example
-   * // SELECT `article_categorys`.`*` FROM `article_categorys` ORDER BY id desc
-   * mysql.table('article_categorys').order('id desc').select();
+   * // SELECT `article_categories`.`*` FROM `article_categories` ORDER BY id desc
+   * mysql.table('article_categories').order('id desc').select();
    *
-   * //SELECT `article_categorys`.`*` FROM `article_categorys` ORDER BY id desc, name asc
-   * mysql.table('article_categorys').order([ 'id desc', 'name asc' ]).select();
+   * //SELECT `article_categories`.`*` FROM `article_categories` ORDER BY id desc, name asc
+   * mysql.table('article_categories').order([ 'id desc', 'name asc' ]).select();
    *
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  order(order: Array<string> | string): Mysql {
+  order(order: Array<string> | string): Builder {
     const type = typeOf(order);
     if (type !== 'array' && type !== 'string') {
       console.warn('[@hyoga/mysql] function {order} params must be type of "array" or "string"');
@@ -316,25 +304,25 @@ export default class Mysql {
    * 设置join条件，可以多次join
    * @param {object} join join条件
    * @example
-   * // SELECT `a`.`*`, `b`.`*` FROM `article_posts` as a LEFT JOIN `article_categorys` AS b ON (a.`category_id`=b.`id`) limit 1
+   * // SELECT `a`.`*`, `b`.`*` FROM `article_posts` as a LEFT JOIN `article_categories` AS b ON (a.`category_id`=b.`id`) limit 1
    * mysql.table('article_posts').alias('a').field([ 'a.*', 'b.*' ]).join({
-   *  article_categorys: {
+   *  article_categories: {
    *    as: 'b',
    *    on: { category_id: 'id' }
    *  }
    * }).find();
    *
-   * // SELECT `a`.`*`, `article_categorys`.`*` FROM `article_posts` as a LEFT JOIN `article_categorys` ON (a.`category_id`=article_categorys.`id`) limit 1
-   * mysql.table('article_posts').alias('a').field([ 'a.*', 'article_categorys.*' ]).join({
-   *  article_categorys: {
+   * // SELECT `a`.`*`, `article_categories`.`*` FROM `article_posts` as a LEFT JOIN `article_categories` ON (a.`category_id`=article_categories.`id`) limit 1
+   * mysql.table('article_posts').alias('a').field([ 'a.*', 'article_categories.*' ]).join({
+   *  article_categories: {
    *    // as: 'b',
    *    on: { category_id: 'id' }
    *  }
    * }).find();
    *
-   * @return {Mysql} 实例
+   * @return {Builder} 实例
    */
-  join(join: Record<string, any>): Mysql {
+  join(join: Record<string, any>): Builder {
     const type = typeOf(join);
     if (type !== 'object') {
       console.warn('[@hyoga/mysql] function {join} params must be type of "object"');
@@ -382,7 +370,6 @@ export default class Mysql {
     // limit，必须在最后面
     sql += this._limit ? ' limit ' + this._limit : '';
 
-    this.sql = sql;
     return this.query(sql);
   }
 
@@ -416,7 +403,7 @@ export default class Mysql {
     }
     sql += tmpArr.join(',');
     sql += this._formatWhere();
-    this.sql = sql;
+
     return this.query(sql);
   }
 
@@ -497,7 +484,7 @@ export default class Mysql {
       }
       sql += tmpArr.join(',');
     }
-    this.sql = sql;
+
     return this.query(sql);
   }
 
@@ -550,7 +537,7 @@ export default class Mysql {
       }
       sql += tmpArr.join(',');
     }
-    this.sql = sql;
+
     return this.query(sql);
   }
 
@@ -566,7 +553,7 @@ export default class Mysql {
     where && this.where(where);
     let sql = 'DELETE FROM ' + this._tableName;
     sql += this._formatWhere();
-    this.sql = sql;
+
     return this.query(sql);
   }
 
@@ -578,8 +565,8 @@ export default class Mysql {
     if (!this._tableName) {
       throw new Error('unknown tableName!');
     }
-    this.sql = `TRUNCATE table ${this._tableName}`;
-    return this.query(this.sql);
+    const sql = `TRUNCATE table ${this._tableName}`;
+    return this.query(sql);
   }
 
   /**
@@ -600,38 +587,8 @@ export default class Mysql {
       })
       .join(',');
 
-    this.sql = `REPLACE INTO ${this._tableName} (${keys}) values (${values})`;
-    return this.query(this.sql);
-  }
-
-  /**
-   * 关闭数据库连接
-   * @return {void}
-   */
-  close(): void {
-    this.pool.end();
-  }
-
-  /**
-   * 获取数据连接
-   * @private
-   * @return {PoolConnection} 数据库连接对象
-   */
-  private _getConnection(): Promise<PoolConnection> {
-    if (!this.pool) {
-      this.pool = createPool(this.config);
-    }
-
-    return new Promise((resolve, reject) => {
-      this.pool.getConnection((err, connection) => {
-        if (err) {
-          console.error('[@hyoga/mysql] MYSQL_CONNECT_ERROR：', err);
-          reject(err);
-        } else {
-          resolve(connection);
-        }
-      });
-    });
+    const sql = `REPLACE INTO ${this._tableName} (${keys}) values (${values})`;
+    return this.query(sql);
   }
 
   /**
@@ -649,7 +606,6 @@ export default class Mysql {
     this._join = {};
     this._data = {};
     this._group = '';
-    this._prefix = '';
   }
 
   /**
@@ -894,6 +850,83 @@ export default class Mysql {
     }
     value = valueType === 'string' && value !== 'NULL' ? `'${value}'` : value;
     return `${fieldName} ${operate} ${value}`;
+  }
+}
+
+/**
+ * Mysql数据库实例，封装了常用操作方式
+ * @module @hyoga/mysql
+ * @author <lq9328@126.com>
+ */
+export default class Mysql {
+  private config: Config;
+  private mysqlPool: MysqlPool;
+  private sql = '';
+
+  /**
+   * 创建Mysql实例
+   * @param {object} config 数据库连接配置
+   */
+  constructor(config: Config) {
+    this.config = {
+      port: 3306,
+      multipleStatements: true,
+      connectionLimit: 100,
+      host: '',
+      user: '',
+      password: '',
+      database: '',
+      prefix: '',
+      ...config,
+    };
+    this.mysqlPool = MysqlPool.getInstance(this.config);
+  }
+
+  /**
+   * 直接执行sql语句
+   * @param {string} sql sql语句
+   * @return {Promise<any>} sql执行结果
+   */
+  async query(sql: string): Promise<any> {
+    this.sql = sql;
+    const connection = await this.mysqlPool.getConnection();
+    return new Promise((resolve, reject) => {
+      connection.query(sql, (err, rows) => {
+        if (err) {
+          console.error('[@hyoga/mysql] MYSQL_EXECUTED_ERROR', err);
+          reject(err);
+        } else {
+          log(`[@hyoga/mysql] ${sql}`);
+          resolve(rows);
+        }
+        connection.release();
+      });
+    });
+  }
+
+  /**
+   * 设置表名
+   * @param {string} tableName 表名
+   * @return {Builder} 实例
+   */
+  table(tableName: string): Builder {
+    if (!tableName) {
+      throw new Error('unknown tableName!');
+    }
+    if (typeOf(tableName) !== 'string') {
+      console.warn('[@hyoga/mysql] function table params must be type of "string"');
+      return new Builder(tableName, this.query);
+    }
+    const finalTableName = `${this.config.prefix}${tableName}`;
+    return new Builder(finalTableName, this.query.bind(this));
+  }
+
+  /**
+   * 关闭数据库连接
+   * @return {void}
+   */
+  close(): void {
+    this.mysqlPool.close();
   }
 
   /**
