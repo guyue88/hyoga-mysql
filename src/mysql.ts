@@ -9,8 +9,7 @@ export type Config = PoolConfig & {
 };
 
 class MysqlPool {
-  private static instance: MysqlPool;
-  private pool: Pool;
+  private pool?: Pool;
   private config: Config;
 
   /**
@@ -22,22 +21,12 @@ class MysqlPool {
   }
 
   /**
-   * 获取实例
-   * @param {object} config 数据库连接配置
-   */
-  public static getInstance(config: Config) {
-    if (!this.instance) {
-      this.instance = new MysqlPool(config);
-    }
-    return this.instance;
-  }
-
-  /**
    * 关闭数据库连接
    * @return {void}
    */
   public close(): void {
     this.pool && this.pool.end();
+    this.pool = undefined;
   }
 
   /**
@@ -51,7 +40,7 @@ class MysqlPool {
     }
 
     return new Promise((resolve, reject) => {
-      this.pool.getConnection((err, connection) => {
+      this.pool?.getConnection((err, connection) => {
         if (err) {
           console.error('[@hyoga/mysql] MYSQL_CONNECT_ERROR：', err);
           reject(err);
@@ -879,7 +868,7 @@ export default class Mysql {
       prefix: '',
       ...config,
     };
-    this.mysqlPool = MysqlPool.getInstance(this.config);
+    this.mysqlPool = new MysqlPool(this.config);
   }
 
   /**
