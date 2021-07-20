@@ -104,7 +104,7 @@ class Builder {
       fields = ['*'];
     }
     const res: (string | Record<string, string>)[] = [];
-    (fields as Array<string | Record<string, string>>).forEach((item) => {
+    (fields as Array<string | Record<string, string>>).forEach(item => {
       if (typeOf(item) === 'object') {
         res.push(item);
       } else if (typeOf(item) === 'string') {
@@ -494,7 +494,7 @@ class Builder {
     const keyArr: string[] = [];
     const valueArr: string[][] = [];
     let keyOk = false;
-    columnList.forEach((column) => {
+    columnList.forEach(column => {
       const arr: string[] = [];
       for (const i in column) {
         !keyOk && keyArr.push('`' + i + '`');
@@ -503,7 +503,7 @@ class Builder {
       valueArr.push(arr);
       keyOk = true;
     });
-    const values = valueArr.map((item) => {
+    const values = valueArr.map(item => {
       return `(${item.join(',')})`;
     });
 
@@ -568,10 +568,10 @@ class Builder {
       throw new Error('unknown table name!');
     }
     const keys = Object.keys(column)
-      .map((it) => `\`${it}\``)
+      .map(it => `\`${it}\``)
       .join(',');
     const values = Object.values(column)
-      .map((it) => {
+      .map(it => {
         return `'${it}'`;
       })
       .join(',');
@@ -696,15 +696,15 @@ class Builder {
    * @return {string} where条件的拼接结果
    */
   private _formatWhere(): string {
-    const sqlStr = this._where._sql.map((item) => `(${item})`).join(' AND ');
+    const sqlStr = this._where._sql.map(item => `(${item})`).join(' AND ');
     const sqlCondition: string[] = [];
-    this._where._condition.forEach((item) => {
+    this._where._condition.forEach(item => {
       const singleWhere = {};
       const multiples2sql: string[] = [];
 
       /* 将多字段名数据单独处理，并将值是字符串的数据转化为数组，便于统一处理 */
       const keys = Object.keys(item);
-      keys.forEach((key) => {
+      keys.forEach(key => {
         let val = item[key];
         if (typeOf(val) === 'null') {
           val = ['IS', 'NULL'];
@@ -716,7 +716,7 @@ class Builder {
         if (_logic) {
           const multiple = { _logic };
           const multipleKeys = key.split(_logic === 'OR' ? '|' : '&');
-          multipleKeys.forEach((m) => {
+          multipleKeys.forEach(m => {
             multiple[m] = val;
           });
           const tmp = this._formatWhereItem(multiple);
@@ -786,7 +786,7 @@ class Builder {
       ) {
         return this._getOperateResultSql(operate, fieldName, value as Array<any>);
       } else {
-        const res: string[] = value.map((item) => {
+        const res: string[] = value.map(item => {
           return this._getOperateResultSql(operate, fieldName, item);
         });
         return res.join(' OR ');
