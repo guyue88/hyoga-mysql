@@ -323,11 +323,9 @@ class Builder {
 
   /**
    * 查找一条数据
-   * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  async find(where?: Record<string, any> | string): Promise<any> {
-    where && this.where(where);
+  async find(): Promise<any> {
     this._limit = 1;
     const data = await this.select();
     return data && data[0];
@@ -335,15 +333,12 @@ class Builder {
 
   /**
    * 查找数据
-   * @param {object|string} where where条件
    * @return {Promise<any>} 查询结果
    */
-  select(where?: Record<string, any> | string): Promise<any> {
+  select(): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
-
-    where && this.where(where);
 
     let sql = 'SELECT';
 

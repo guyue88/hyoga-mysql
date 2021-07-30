@@ -4,6 +4,8 @@ export function htmlspecialchars(str: string) {
     return str;
   }
   const reg = {
+    // eslint-disable-next-line quotes
+    "'": '&apos;',
     '"': '&quot;',
     '&': '&amp;',
     '<': '&lt;',
@@ -17,6 +19,8 @@ export function htmlspecialchars(str: string) {
 
 export function htmlspecialchars_decode(str: string) {
   const reg = {
+    // eslint-disable-next-line quotes
+    '&apos;': "'",
     '&quot;': '"',
     '&amp;': '&',
     '&lt;': '<',
@@ -29,7 +33,7 @@ export function htmlspecialchars_decode(str: string) {
 }
 
 export function isEmptyObject(obj: Record<string | number, any>) {
-  let name;
+  let name: any;
   for (name in obj) {
     return false;
   }
@@ -64,7 +68,7 @@ export function timeFormat(time: Date, fmt: string) {
 }
 
 export function typeOf(
-  o: any
+  o: any,
 ):
   | 'undefined'
   | 'number'

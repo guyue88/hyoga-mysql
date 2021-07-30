@@ -1,3 +1,4 @@
+/* eslint-disable */
 const Mysql = require('../dist/mysql').default;
 const chai = require('chai'),
   expect = chai.expect;
@@ -89,7 +90,7 @@ describe('where', function () {
       .find();
     const sql7 = mysql._sql();
     expect(sql7).to.be.eql(
-      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`name` = 'admin' OR `admins`.`name` = 'editor') limit 1"
+      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`name` = 'admin' OR `admins`.`name` = 'editor') limit 1",
     );
 
     await mysql
@@ -105,7 +106,7 @@ describe('where', function () {
       .find();
     const sql9 = mysql._sql();
     expect(sql9).to.be.eql(
-      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' OR `admins`.`email` LIKE '%admin%') limit 1"
+      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' OR `admins`.`email` LIKE '%admin%') limit 1",
     );
 
     await mysql
@@ -114,7 +115,7 @@ describe('where', function () {
       .find();
     const sql10 = mysql._sql();
     expect(sql10).to.be.eql(
-      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' AND `admins`.`email` LIKE '%admin%') limit 1"
+      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`name` LIKE '%admin%' AND `admins`.`email` LIKE '%admin%') limit 1",
     );
 
     await mysql
@@ -158,7 +159,7 @@ describe('where', function () {
       .find();
     const sql16 = mysql._sql();
     expect(sql16).to.be.eql(
-      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 AND `admins`.`name` = 'admin') limit 1"
+      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 AND `admins`.`name` = 'admin') limit 1",
     );
 
     await mysql
@@ -167,7 +168,7 @@ describe('where', function () {
       .find();
     const sql17 = mysql._sql();
     expect(sql17).to.be.eql(
-      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 OR `admins`.`name` = 'admin') limit 1"
+      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`id` BETWEEN 5 AND 10 OR `admins`.`name` = 'admin') limit 1",
     );
 
     await mysql
@@ -177,7 +178,7 @@ describe('where', function () {
       .find();
     const sql18 = mysql._sql();
     expect(sql18).to.be.eql(
-      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 AND `admins`.`id` <= 10) limit 1"
+      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 AND `admins`.`id` <= 10) limit 1",
     );
 
     await mysql
@@ -187,7 +188,7 @@ describe('where', function () {
       .find();
     const sql19 = mysql._sql();
     expect(sql19).to.be.eql(
-      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 OR `admins`.`id` <= 10) limit 1"
+      "SELECT `admins`.* FROM `admins` WHERE (`admins`.`status` = 'on') AND (`admins`.`id` >= 1 OR `admins`.`id` <= 10) limit 1",
     );
   });
 });
