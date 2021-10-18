@@ -2,7 +2,7 @@ import { PoolConfig, createPool, PoolConnection, Pool } from 'mysql';
 import debug from 'debug';
 import { typeOf, isEmptyObject } from './utils';
 
-const log = debug('Hyoga');
+const log = debug('hyoga-mysql');
 
 export type Config = PoolConfig & {
   prefix?: string;
@@ -52,14 +52,22 @@ class MysqlPool {
   }
 }
 
-class Builder {
+type Condition =
+  | string
+  | number
+  | null
+  | [string, string | number | null]
+  | [string, (string | number | null)[]]
+  | Record<string, string | number>;
+
+export class Builder {
   private query: (sql: string) => Promise<any>;
 
   private _tableName: string;
   private _tableAlias: string;
   private _fields: (string | Record<string, any>)[];
   private _group: string;
-  private _where: { _condition: Record<string, any>[]; _sql: string[] };
+  private _where: { _condition: Record<string, Condition>[]; _sql: string[] };
   private _limit: number | string;
   private _data: Record<string, any>;
   private _order: string;
@@ -704,13 +712,13 @@ class Builder {
         if (typeOf(val) === 'null') {
           val = ['IS', 'NULL'];
         } else if (key.indexOf('_') !== 0 && typeOf(val) !== 'array' && typeOf(val) !== 'object') {
-          val = ['=', val];
+          val = ['=', val as any];
         }
         /* 将多字段名的数据单独处理 {'title|content': ['like', '%javascript%']} */
         const _logic = key.indexOf('|') !== -1 ? 'OR' : key.indexOf('&') !== -1 ? 'AND' : '';
         if (_logic) {
           const multiple = { _logic };
-          const multipleKeys = key.split(_logic === 'OR' ? '|' : '&');
+          const multipleKeys = key.split(/[|&]/);
           multipleKeys.forEach(m => {
             multiple[m] = val;
           });
