@@ -12,24 +12,14 @@ const config = {
 };
 const mysql = new Mysql(config);
 
-describe('connection', function () {
-  it('when connect should not throw error', function () {
-    expect(mysql._getConnection.bind(mysql)).to.not.throw(Error);
-  });
-});
-
 describe('find row', function () {
-  it('when table not set should throw error', async function () {
-    // expect(mysql.find.bind(mysql)).to.throw(Error);
-  });
-
   it('when {where} not set should return all columns', async function () {
     const data = await mysql.table('admins').find();
     expect(data).to.include.keys('id');
   });
 
   it('when {where} was set should return correct row', async function () {
-    const data = await mysql.table('admins').find({ id: 1 });
+    const data = await mysql.table('admins').where({ id: 1 }).find();
     _sql = mysql._sql();
     expect(data).to.have.any.keys({ id: 1 });
   });
@@ -42,7 +32,7 @@ describe('select rows', function () {
   });
 
   it('when {where} was set should return correct rows', async function () {
-    const data = await mysql.table('admins').select({ id: 1 });
+    const data = await mysql.table('admins').where({ id: 1 }).select();
     expect(data).to.be.a('array');
     expect(data[0]).to.have.any.keys({ id: 1 });
   });
@@ -260,35 +250,25 @@ describe('join', function () {
 
 describe('add', function () {
   it('when {add} operate should add the correct rows', async function () {
-    let insertId = 0;
-    after(async function () {
-      await mysql.table('article_categories').delete({ id: insertId });
-    });
     const data1 = await mysql.table('article_categories').add({ name: '测试add' });
     expect(data1).to.have.any.keys({ affectedRows: 1 });
-    insertId = data1.insertId;
+    const insertId = data1.insertId;
+
+    await mysql.table('article_categories').delete({ id: insertId });
   });
 });
 
 describe('delete', function () {
   it('when {delete} operate should delete the correct rows', async function () {
-    let insertId = 0;
-    before(async function () {
-      const data1 = await mysql.table('article_categories').add({ name: '测试delete' });
-      insertId = data1.insertId;
-    });
+    const { insertId } = await mysql.table('article_categories').add({ name: '测试delete' });
     await mysql.table('article_categories').delete({ id: insertId });
-    const data1 = await mysql.table('article_categories').find({ id: insertId });
+    const data1 = await mysql.table('article_categories').where({ id: insertId }).find();
     expect(data1).to.be.undefined;
   });
 });
 
 describe('update', function () {
   it('when {update} operate should update the correct rows', async function () {
-    after(async function () {
-      await mysql.table('article_categories').update({ name: '测试数据' }, { id: 4 });
-      await mysql.table('article_categories').update({ name: '测试数据' }, { id: 5 });
-    });
     const data1 = await mysql.table('article_categories').update({ name: '测试update' }, { id: 4 });
     expect(data1).to.have.any.keys({ affectedRows: 1 });
     const data2 = await mysql.table('article_categories').where({ id: 4 }).find();
@@ -297,14 +277,15 @@ describe('update', function () {
     expect(data3).to.have.any.keys({ affectedRows: 1 });
     const data4 = await mysql.table('article_categories').where({ id: 5 }).find();
     expect(data4).to.have.any.keys({ name: '测试update' });
+
+    // after
+    await mysql.table('article_categories').update({ name: '测试数据' }, { id: 4 });
+    await mysql.table('article_categories').update({ name: '测试数据' }, { id: 5 });
   });
 });
 
 describe('updateMany', function () {
   it('when {updateMany} operate should update the correct rows', async function () {
-    after(async function () {
-      await mysql.table('article_categories').update({ name: '测试数据' }, { id: 4 });
-    });
     const data1 = await mysql.table('article_categories').update({ name: '测试update' }, { id: 4 });
     expect(data1).to.have.any.keys({ affectedRows: 1 });
     const data2 = await mysql.table('article_categories').where({ id: 4 }).find();
@@ -313,5 +294,8 @@ describe('updateMany', function () {
     expect(data3).to.have.any.keys({ affectedRows: 1 });
     const data4 = await mysql.table('article_categories').where({ id: 5 }).find();
     expect(data4).to.have.any.keys({ name: '测试update' });
+
+    // after
+    await mysql.table('article_categories').update({ name: '测试数据' }, { id: 4 });
   });
 });

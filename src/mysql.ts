@@ -212,6 +212,7 @@ export class Builder {
    */
   where(where: Record<string, any> | string): Builder {
     const type = typeOf(where);
+
     if (type !== 'string' && type !== 'object') {
       console.warn('[@hyoga/mysql] function where params must be type of "object" or "string"');
       return this;
@@ -371,7 +372,10 @@ export class Builder {
    * @param {object|string} where where条件，参见[where]方法
    * @return {Promise<any>} 更新结果
    */
-  update(column: Record<string, any>, where?: Record<string, any> | string): Promise<any> {
+  update(
+    column: Record<string, string | number | ['+' | '-', string | number]>,
+    where?: Record<string, any> | string,
+  ): Promise<any> {
     if (!this._tableName) {
       throw new Error('unknown table name!');
     }
@@ -382,14 +386,13 @@ export class Builder {
 
     const tmpArr: string[] = [];
     for (const i in column) {
+      const item = column[i];
       let tmp = '';
-      // 检测数据中是否含有加减号
-      const match = (column[i] + '').match(/^(\+|-)([^+-]+)$/);
-      if (match) {
-        tmp = this._formatFieldsName(i) + ' = ' + this._formatFieldsName(i) + match[1] + match[2];
+      // 检测数据中是否是符合操作，比如自增自减
+      if (Array.isArray(item)) {
+        tmp = `${this._formatFieldsName(i)} = ${this._formatFieldsName(i)} ${item[0]} ${item[1]}`;
       } else {
-        // eslint-disable-next-line quotes
-        tmp = this._formatFieldsName(i) + " = '" + column[i] + "'";
+        tmp = `${this._formatFieldsName(i)} = '${item}'`;
       }
       tmpArr.push(tmp);
     }
@@ -424,7 +427,7 @@ export class Builder {
    */
   increase(field: string, step = 1): Promise<any> {
     const item = {};
-    item[field] = '+' + step;
+    item[field] = ['+', step];
     return this.update(item);
   }
 
@@ -436,7 +439,7 @@ export class Builder {
    */
   decrement(field: string, step = 1): Promise<any> {
     const item = {};
-    item[field] = '-' + step;
+    item[field] = ['-', step];
     return this.update(item);
   }
 

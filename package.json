@@ -4,8 +4,9 @@
   "description": "一个MYSQL数据库的常用操作封装，操作方式类似THINKPHP的数据库操作",
   "main": "dist/mysql.js",
   "scripts": {
+    "build": "rimraf dist && tsc -p .",
     "test": "mocha test/test.js",
-    "prepublish": "rimraf dist && tsc -p ."
+    "prepublish": "npm run build"
   },
   "dependencies": {
     "@types/mysql": "^2.15.17",
