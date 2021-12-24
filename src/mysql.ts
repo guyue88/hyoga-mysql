@@ -74,9 +74,12 @@ export class Builder {
   private _join: Record<string, any>;
 
   constructor(tableName: string, query: (sql: string) => Promise<any>) {
-    this._resetParams();
-    this._tableName = tableName;
-    this.query = query;
+    this._resetParams(tableName);
+    this.query = async (sql: string) => {
+      const data = await query(sql);
+      this._resetParams(tableName);
+      return data;
+    };
   }
 
   /**
@@ -591,8 +594,8 @@ export class Builder {
    * @private
    * @return {void}
    */
-  private _resetParams(): void {
-    this._tableName = '';
+  private _resetParams(tableName: string): void {
+    this._tableName = tableName;
     this._tableAlias = '';
     this._fields = ['*'];
     this._where = { _sql: [], _condition: [] };
