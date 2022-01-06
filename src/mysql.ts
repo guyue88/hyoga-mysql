@@ -619,11 +619,17 @@ export class Builder {
     let res = ' ';
 
     this._fields.forEach((item, index) => {
+      const isFunction = (obj: any) => /\w+\(.+\)/.test(obj);
+
       res += index > 0 ? ', ' : '';
       if (typeOf(item) === 'object') {
         for (const i in item as Record<string, any>) {
-          res += this._formatFieldsName(i) + ' as ' + item[i];
+          const name = isFunction(i) ? i : this._formatFieldsName(i);
+          res += `${name} as ${item[i]}`;
         }
+      } else if (isFunction(item)) {
+        // 如果是函数，不做处理
+        res += item;
       } else if (item.includes(' as ')) {
         const tmp = item.split(' as ');
         res += this._formatFieldsName(tmp[0]) + ' as ' + tmp[1];
